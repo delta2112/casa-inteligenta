@@ -9,4 +9,5 @@ senzor umiditate in sol pentru controlul irigatiilor
 NFC (access cu card / telefon)
 senzor intensitate luminoasa
 control zavor electric
+gps
 
