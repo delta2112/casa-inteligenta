@@ -1,4 +1,7 @@
-acces casa (descuiat cu cardul)
+- acces casa (descuiat cu cardul)
+    card => NFC reader
+    NFC reader => Blink.virtualWrite( virtual_pin_NFC )
+    Back_end primeste informatia de la ?? aplicati e / hardware
 plecat de acasa (incuiat)
 alarma miscare sau panica
 irigat ghivece
