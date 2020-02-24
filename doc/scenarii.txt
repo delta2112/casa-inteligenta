@@ -1,7 +1,10 @@
 acces casa (descuiat cu cardul)
 plecat de acasa (incuiat)
 alarma miscare sau panica
+irigat ghivece
+irigat gradina
 detectie fum
 vacanta
 simulare casa locuita
+localizare masina
 
