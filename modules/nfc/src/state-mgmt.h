@@ -13,15 +13,17 @@ enum SystemStatesList {
                             // for other defines
 };
 enum NfcStatesList {
-    CARD_DETECT,
-    DEFAULT_KEY,
-    SECURE_KEY,
-    UPDATE_KEY,
-    IDLE,
-    READ_DATA,
-    WRITE_DATA,
+    CARD_DETECT, // card detected near sensor
+    DEFAULT_KEY, // authenticated with default Mifare key
+    SECURE_KEY,  // authenticated with secure key stored inside project
+    NEW_KEY_AUTH,// authenticated with the new key stored inside class "key" attribute
+    UPDATE_KEY,  // and the new presented card
+    SAVE_NEW_KEY,// save it inside the class "key" attribute
+    IDLE,        // waiting for things to happen
+    READ_DATA,   // read data from card
+    WRITE_DATA,  // write data to card
 
-    NFC_ERROR,
+    NFC_ERROR,   // nfc working error
 
     MAX_NFC_CONFIG_VALUE // keep this entry the last one to use as "length" of enum
                          // for other defines
@@ -34,12 +36,12 @@ extern const char* NfcStateStr[];
 
 template <typename T>
 class State {
-    private:
+    protected:
         volatile T state;
     #if defined(APP_DEBUG)
-    protected:
         const char** StateStr;
     #endif
+
     public:
         T get() { return state; }
         bool isState(T new_state) { return (state == new_state); }
@@ -49,6 +51,7 @@ class State {
                 state = new_state;
             }
         }
+        virtual void run(void);
 };
 
 class SystemState: public State<SystemStatesList> {
@@ -58,6 +61,7 @@ class SystemState: public State<SystemStatesList> {
             StateStr = SystemStateStr;
         }
         #endif
+        void run(void);
 };
 class NfcState: public State<NfcStatesList> {
     public:
@@ -66,6 +70,7 @@ class NfcState: public State<NfcStatesList> {
             StateStr = NfcStateStr;
         }
         #endif
+        void run(void);
 };
 
 extern SystemState systemState;

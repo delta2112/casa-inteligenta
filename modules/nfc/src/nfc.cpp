@@ -1,5 +1,9 @@
+#include <Blynk/BlynkApi.h>
+
+#include "BlynkSimpleStream.h"
 #include "debug.h"
 #include "settings.h"
+#include "state-mgmt.h"
 #include "nfc.h"
 
 NFC nfc;
@@ -15,28 +19,68 @@ void NFC::begin() {
   mfrc522.PCD_Init(SS_PIN, RST_PIN);
 }
 
-void NFC::run(void) {
-  // If no new card just exit run() and save uC processing time
-  if ( ! mfrc522.PICC_IsNewCardPresent()) {
-    return;
+void NFC::run(void) { // IDLE running on timer
+  if(IDLE == nfcState.get()) {
+    // If no new card just exit run() and save uC processing time
+    if ( ! mfrc522.PICC_IsNewCardPresent()) {
+      return;
+    }
+
+    // Read card serial number and return if that fails to save uC processing time
+    if ( ! mfrc522.PICC_ReadCardSerial()) {
+      return;
+    }
+    nfcState.set(CARD_DETECT);
   }
-
-  // Read card serial number and return if that fails to save uC processing time
-  if ( ! mfrc522.PICC_ReadCardSerial()) {
-    return;
-  }
-
-  // TODO: update card serial on blynk NFC::mfrc522.uid.size => NFC::mfrc522.uid.uidByte[i]
-
-  byte data_buffer[18];
+}
+void NFC::card_detected(void) {
   if( is_valid_card_type() ) {
-    if( authenticate_card(READ_KEYA, nfc_default_key_a, 3) ) {
-      if( read_block(3, data_buffer) ) {
-mfrc522.MIFARE_SetAccessBits(	&(data_buffer[6]),(byte)0b000, (byte)0b0000, (byte)0b000, (byte)0b0001 );
-/// g0 < Access bits [C1 C2 C3] for block 0 (for sectors 0-31) or blocks 0-4 (for sectors 32-39)
-/// g1 < Access bits C1 C2 C3] for block 1 (for sectors 0-31) or blocks 5-9 (for sectors 32-39)
-/// g2 < Access bits C1 C2 C3] for block 2 (for sectors 0-31) or blocks 10-14 (for sectors 32-39)
-/// g3 < Access bits C1 C2 C3] for the sector trailer, block 3 (for sectors 0-31) or block 15 (for sectors 32-39)
+    Blynk.virtualWrite(CHN_VALID_CARD,1);
+    nfcState.set(NEW_KEY_AUTH);
+  } else {
+    Blynk.virtualWrite(CHN_VALID_CARD,0);
+    nfcState.set(IDLE);
+  }
+  Blynk.virtualWrite(CHN_CARD_UID, uid???);
+}
+void NFC::authenticate(void){
+  if( authenticate_card(READ_KEYA, key, 3) ) {
+    DEBUG_PRINT("Authenticated with new key");
+    Blynk.virtualWrite(CHN_AUTH,NEW_AUTH_KEY);
+    nfcState.set(READ_DATA);
+  } else {
+    nfcState.set(SECURE_KEY);
+  }
+}
+void NFC::secure_key_auth(void) {
+  if( authenticate_card(READ_KEYA, nfc_secure_key_a, 3) ) {
+    DEBUG_PRINT("Authenticated with secure key");
+    Blynk.virtualWrite(CHN_AUTH,SECURE_AUTH_KEY);
+    nfcState.set(READ_DATA);
+  } else {
+    nfcState.set(DEFAULT_KEY);
+  }
+}
+void NFC::default_key_auth(void) {
+  if( authenticate_card(READ_KEYA, nfc_default_key_a, 3) ) {
+    DEBUG_PRINT("Authenticated with default key");
+    Blynk.virtualWrite(CHN_AUTH,DEFAULT_AUTH_KEY);
+    nfcState.set(UPDATE_KEY);
+  } else {
+    DEBUG_PRINT("Cannot Authenticate with any key");
+    Blynk.virtualWrite(CHN_AUTH,NOT_AUTH);
+    nfcState.set(NFC_ERROR);
+  }
+}
+void NFC::update_key(void) {
+  if( updateKey) {
+    // if( use new key )
+    if( read_block(3, data_buffer) ) {
+    mfrc522.MIFARE_SetAccessBits(	&(data_buffer[6]),(byte)0b000, (byte)0b0000, (byte)0b000, (byte)0b0001 );
+    /// g0 < Access bits [C1 C2 C3] for block 0 (for sectors 0-31) or blocks 0-4 (for sectors 32-39)
+    /// g1 < Access bits C1 C2 C3] for block 1 (for sectors 0-31) or blocks 5-9 (for sectors 32-39)
+    /// g2 < Access bits C1 C2 C3] for block 2 (for sectors 0-31) or blocks 10-14 (for sectors 32-39)
+    /// g3 < Access bits C1 C2 C3] for the sector trailer, block 3 (for sectors 0-31) or block 15 (for sectors 32-39)
 
         for(byte i = 0; i < 16; i++) {
           DEBUG_PRINT(data_buffer[i], HEX);
@@ -45,13 +89,34 @@ mfrc522.MIFARE_SetAccessBits(	&(data_buffer[6]),(byte)0b000, (byte)0b0000, (byte
         DEBUG_PRINTLN("\n");
         // TODO: notify card uses default key (not secure!!)
       }
-    } else {
-      if( ! authenticate_card(READ_KEYA, nfc_secure_key_a, 3) ) {
-        DEBUG_PRINT("Cannot read using either default or secure key");
-      }
-    }
   }
-  detach_current_card();
+
+}
+detach_current_card(); adadsa a dafda
+
+bool save_new_key(String s) {
+  return false;
+}
+card_data_buffer
+
+void NFC::read_data(void) {
+}
+void NFC::write_data(void) {
+}
+void NFC::reinit(void) {
+}
+void NFC::error(void) {
+}
+
+
+
+void NFC::update_key(void) {
+
+}
+
+void update_uid(void) {
+  // TODO: update card serial on blynk NFC::mfrc522.uid.size => NFC::mfrc522.uid.uidByte[i]
+  Blynk.virtualWrite(V1, uid);
 }
 
 bool NFC::authenticate_card(const enum MFRC522::PICC_Command key_type, MFRC522::MIFARE_Key key, byte block) { //

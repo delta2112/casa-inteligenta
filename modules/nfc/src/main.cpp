@@ -1,8 +1,12 @@
 #include <Arduino.h>
-#include <BlynkSimpleStream.h>
+#include "BlynkSimpleStream.h"
 
 #include "debug.h"
 #include "initializer.h"
+
+BLYNK_CONNECTED() {
+    Blynk.syncAll();
+}
 
 void setup() {
    deviceInitializer.begin();

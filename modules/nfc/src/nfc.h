@@ -14,8 +14,17 @@ class NFC {
   public:
     NFC();
     void begin();
-    void run(void);
-    bool setKey( String s);
+    void run(void);              // idle loop processing - called run for consistency
+    bool save_new_key(String s); // store received key from Blynk in internal class "key" attribute
+    void update_key(void);       // changed key on the Mifare card
+    void card_detected(void);    // process card detection
+    void default_key_auth(void);
+    void secure_key_auth(void);
+    void new_key_auth(void);
+    void read_data(void);
+    void write_data(void);
+    void reinit(void);
+    void error(void);
 
   private:
     bool authenticate_card(const enum MFRC522::PICC_Command, MFRC522::MIFARE_Key, byte);
@@ -30,13 +39,8 @@ class NFC {
     MFRC522 mfrc522;
     MFRC522::MIFARE_Key key;
 
-
-    bool programMode = false;  // initialize programming mode to false
-    uint8_t successRead;  // Variable integer to keep if we have Successful Read
-    byte storedCard[4];  // Stores an ID read from EEPROM
-    byte readCard[4];    // Stores scanned ID read from RFID Module
-    byte masterCard[4];  // Stores master card's ID read from EEPROM
-                          // from Reader
+    byte card_data_buffer[18];
+    bool updateKey = false;
 };
 
 extern NFC nfc;
