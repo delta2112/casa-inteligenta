@@ -3,6 +3,8 @@
 
 #include <MFRC522.h>
 
+#include "BlynkSimpleStream.h"
+
 #define NFC_FW_VER "1.0"
 #define NFC_HW_VER "1.0"
 #define NFC_SHIELD "PN532"
@@ -21,6 +23,7 @@ constexpr byte CHN_SECURE_KEY = V0; // channel for new key sent from Blynk to ar
 constexpr byte CHN_CARD_UID   = V1; // channel to send UID of detected card to Blynk
 constexpr byte CHN_VALID_CARD = V2; // channel to send card validity to Blynk
 constexpr byte CHN_AUTH       = V3; // channel to send authentication status based on auth enum
+constexpr byte CHN_UPDATE_KEY = V4; // channel to receive request to update the key
 
 // NFC settings
 enum AuthStatus {

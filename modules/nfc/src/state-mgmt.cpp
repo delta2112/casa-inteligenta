@@ -39,6 +39,7 @@ void SystemState::run(void) { // this is the actual state machine of the
 void NfcState::run(void) {
     switch(state) {
         case IDLE:
+            nfc.detach_current_card();
             break; // idle is run by timer, but we need to account for it here
         case CARD_DETECT:
             nfc.card_detected();
@@ -50,9 +51,9 @@ void NfcState::run(void) {
         case NEW_KEY_AUTH:
             nfc.new_key_auth();
         case UPDATE_KEY:
-            nfc.update_key();
+            nfc.update_key_on_card();
         case SAVE_NEW_KEY:
-            nfc.save_new_key();
+            systemState.set(RUNNING);
         case READ_DATA:
             nfc.read_data();
         case WRITE_DATA:

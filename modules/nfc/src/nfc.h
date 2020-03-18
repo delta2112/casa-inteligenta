@@ -12,19 +12,25 @@ constexpr enum MFRC522::PICC_Command READ_KEYB = MFRC522::PICC_Command::PICC_CMD
 
 class NFC {
   public:
-    NFC();
-    void begin();
-    void run(void);              // idle loop processing - called run for consistency
-    bool save_new_key(String s); // store received key from Blynk in internal class "key" attribute
-    void update_key(void);       // changed key on the Mifare card
-    void card_detected(void);    // process card detection
-    void default_key_auth(void);
-    void secure_key_auth(void);
-    void new_key_auth(void);
-    void read_data(void);
-    void write_data(void);
-    void reinit(void);
-    void error(void);
+    NFC();                         // constructor to initialize internal "key" with 0x00
+    void begin();                  // initialize nfc module
+    void run(void);                // idle loop processing - named "run" for consistency
+    void card_detected(void);      // process card detection and push card UID to Blynk server
+    void new_key_auth(void);       // try to authenticate card with new key received from
+                                   // Blynk server
+    void secure_key_auth(void);    // try to authenticate card with secure Mifare key
+                                   // stored in software
+    void default_key_auth(void);   // try to authenticate card with default Mifare key (6 x 0xFF)
+    bool save_new_key(String);   // store received key from Blynk in internal class
+                                   // attribute: "key"
+    void set_key_to_update(byte);
+    void update_key_on_card(void); // changed key on the Mifare card with "new key"
+                                   // stored in "key" attribute
+    void read_data(void);          // read data from card
+    void write_data(void);         // write data to card
+    void reinit(void);             // 
+    void detach_current_card(void);
+    void error(void);              // 
 
   private:
     bool authenticate_card(const enum MFRC522::PICC_Command, MFRC522::MIFARE_Key, byte);
@@ -32,12 +38,16 @@ class NFC {
     bool write_block(byte block_number, byte buffer[16]);
     bool is_valid_card_type();
     bool change_uid(byte new_uid[4]);
-    void detach_current_card(void);
 
     bool ascii_to_hex(const char digit, byte *destination);
+    unsigned char byte_to_HEX_string(byte byte_number);
+    void hex_to_ascii(const unsigned char[], byte, char[]);
 
     MFRC522 mfrc522;
     MFRC522::MIFARE_Key key;
+    bool received_new_key = false;
+    char uid[15];
+    AuthStatus key_to_update; 
 
     byte card_data_buffer[18];
     bool updateKey = false;
