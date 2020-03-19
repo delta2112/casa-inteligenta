@@ -4,18 +4,25 @@
 
 #if defined(APP_DEBUG)
 const char* SystemStateStr[MAX_SYSTEM_CONFIG_VALUE] = {
-    "WAIT_CONFIG",   // waiting for configuration from aaplication
-    "CONFIGURING",   // configuration started
-    "RUNNING",       // normal runnig state
-    "RESET_CONFIG",  // configuration initialized 
-    "ERROR"          // something went wrong, device should reset in this state?
+    "SYS:WAIT_CONFIG",   // waiting for configuration from aaplication
+    "SYS:CONFIGURING",   // configuration started
+    "SYS:RUNNING",       // normal runnig state
+    "SYS:RESET_CONFIG",  // configuration initialized 
+    "SYS:SYSTEM_ERROR"   // something went wrong, device should reset in this state?
 };
+
 const char* NfcStateStr[MAX_NFC_CONFIG_VALUE] = {
-    "WAIT_CONFIG",   // waiting for configuration from aaplication
-    "CONFIGURING",   // configuration started
-    "RUNNING",       // normal runnig state
-    "RESET_CONFIG",  // configuration initialized 
-    "ERROR"          // something went wrong, device should reset in this state?
+    "NFC:CARD_DETECT",
+    "NFC:DEFAULT_KEY",
+    "NFC:SECURE_KEY",
+    "NFC:NEW_KEY_AUTH",
+    "NFC:UPDATE_KEY",
+    "NFC:SAVE_NEW_KEY",
+    "NFC:IDLE",
+    "NFC:READ_DATA",
+    "NFC:WRITE_DATA",
+    "NFC:DETACH",
+    "NFC:NFC_ERROR"
 };
 
 void SystemState::run(void) { // this is the actual state machine of the
@@ -39,27 +46,38 @@ void SystemState::run(void) { // this is the actual state machine of the
 void NfcState::run(void) {
     switch(state) {
         case IDLE:
-            nfc.detach_current_card();
             break; // idle is run by timer, but we need to account for it here
         case CARD_DETECT:
             nfc.card_detected();
             break;
         case DEFAULT_KEY:
             nfc.default_key_auth();
+            break;
         case SECURE_KEY:
             nfc.secure_key_auth();
+            break;
         case NEW_KEY_AUTH:
             nfc.new_key_auth();
+            break;
         case UPDATE_KEY:
             nfc.update_key_on_card();
+            break;
         case SAVE_NEW_KEY:
             systemState.set(RUNNING);
+            break;
         case READ_DATA:
             nfc.read_data();
+            break;
         case WRITE_DATA:
             nfc.write_data();
+            break;
+        case DETACH:
+            nfc.detach_current_card();
+            nfcState.set(IDLE);
+            break;
         case NFC_ERROR:
             nfc.reinit();
+            break;
         default:
             nfc.error();
     }

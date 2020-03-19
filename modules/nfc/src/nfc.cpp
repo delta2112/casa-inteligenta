@@ -41,7 +41,7 @@ void NFC::card_detected(void) {
       nfcState.set(NEW_KEY_AUTH);
     } else {
       DEBUG_PRINTLN("Authenticating with secure key");
-      nfcState.set(SECURE_KEY);
+      nfcState.set(DEFAULT_KEY);
     }
   } else {
     Blynk.virtualWrite(CHN_VALID_CARD,0);
@@ -51,7 +51,6 @@ void NFC::card_detected(void) {
   DEBUG_PRINT("Card UID: "); DEBUG_PRINTLN(uid);
 
   Blynk.virtualWriteBinary(CHN_CARD_UID, mfrc522.uid.uidByte, mfrc522.uid.size);
-  //Blynk.virtualWrite(CHN_CARD_UID, uid);
 }
 void NFC::new_key_auth(void){
   if( authenticate_card(READ_KEYA, key, 3) ) {
@@ -75,18 +74,22 @@ void NFC::default_key_auth(void) {
   if( authenticate_card(READ_KEYA, nfc_default_key_a, 3) ) {
     DEBUG_PRINT("Authenticated with default key");
     Blynk.virtualWrite(CHN_AUTH,DEFAULT_AUTH_KEY);
+    nfcState.set(UPDATE_KEY);
   } else {
     DEBUG_PRINT("Cannot Authenticate with any key");
     Blynk.virtualWrite(CHN_AUTH,NOT_AUTH);
-    nfcState.set(IDLE);
+    nfcState.set(DETACH);
   }
 }
 void NFC::set_key_to_update(byte auth) {
   key_to_update = (AuthStatus) auth;
 }
-bool NFC::save_new_key(String new_key) {
+bool NFC::save_new_key(char buffer[], size_t length) {
   byte string_index = 0;
-  byte key_index = 0;
+  for( string_index = 0; string_index < length; string_index++ ) {
+    key.keyByte[string_index] = buffer[string_index];
+  }
+/*  byte key_index = 0;
   byte nibble = 0;
   if(12 != new_key.length()) {
     DEBUG_PRINTLN(String("Key string not right length. Should be 12 HEX number == 6 bytes and is: ") + new_key.length());
@@ -106,11 +109,7 @@ bool NFC::save_new_key(String new_key) {
       return false;
     }
     key.keyByte[key_index++] |= nibble;
-param.getBuffer(), param.getLength()
-
-
-
-  }
+  }*/
 
   // key was successfuly added, and it will be used afterwards
   received_new_key = true;
@@ -121,6 +120,11 @@ bool NFC::authenticate_card(const enum MFRC522::PICC_Command key_type, MFRC522::
   byte i;
 
   status = mfrc522.PCD_Authenticate(key_type, block, &key, &(mfrc522.uid)); //line 834 of MFRC522.cpp file
+
+// key->keyByte[i];
+// uid->uidByte[i+uid->size-4];
+
+
   if (status == MFRC522::STATUS_OK) {
     DEBUG_PRINT("Card detected: ");
     for(i = 0; i < mfrc522.uid.size; i++) {
@@ -189,6 +193,7 @@ void NFC::update_key_on_card(void) {
         // TODO: notify card uses default key (not secure!!)
       }
   }
+  nfcState.set(DETACH);
 }
 
 void NFC::read_data(void) {

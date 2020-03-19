@@ -21,7 +21,7 @@ class NFC {
     void secure_key_auth(void);    // try to authenticate card with secure Mifare key
                                    // stored in software
     void default_key_auth(void);   // try to authenticate card with default Mifare key (6 x 0xFF)
-    bool save_new_key(String);   // store received key from Blynk in internal class
+    bool save_new_key(char[], size_t);   // store received key from Blynk in internal class
                                    // attribute: "key"
     void set_key_to_update(byte);
     void update_key_on_card(void); // changed key on the Mifare card with "new key"

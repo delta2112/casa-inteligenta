@@ -22,6 +22,7 @@ enum NfcStatesList {
     IDLE,        // waiting for things to happen
     READ_DATA,   // read data from card
     WRITE_DATA,  // write data to card
+    DETACH,      // communication finished, no other actions needed, detach card
 
     NFC_ERROR,   // nfc working error
 
