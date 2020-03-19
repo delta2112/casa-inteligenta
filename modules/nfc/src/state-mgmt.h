@@ -13,13 +13,9 @@ enum SystemStatesList {
                             // for other defines
 };
 enum NfcStatesList {
-    CARD_DETECT, // card detected near sensor
-    DEFAULT_KEY, // authenticated with default Mifare key
-    SECURE_KEY,  // authenticated with secure key stored inside project
-    NEW_KEY_AUTH,// authenticated with the new key stored inside class "key" attribute
+    IDLE,        // waiting for things to happen
     UPDATE_KEY,  // and the new presented card
     SAVE_NEW_KEY,// save it inside the class "key" attribute
-    IDLE,        // waiting for things to happen
     READ_DATA,   // read data from card
     WRITE_DATA,  // write data to card
     DETACH,      // communication finished, no other actions needed, detach card

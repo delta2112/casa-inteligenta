@@ -12,13 +12,9 @@ const char* SystemStateStr[MAX_SYSTEM_CONFIG_VALUE] = {
 };
 
 const char* NfcStateStr[MAX_NFC_CONFIG_VALUE] = {
-    "NFC:CARD_DETECT",
-    "NFC:DEFAULT_KEY",
-    "NFC:SECURE_KEY",
-    "NFC:NEW_KEY_AUTH",
+    "NFC:IDLE",
     "NFC:UPDATE_KEY",
     "NFC:SAVE_NEW_KEY",
-    "NFC:IDLE",
     "NFC:READ_DATA",
     "NFC:WRITE_DATA",
     "NFC:DETACH",
@@ -47,18 +43,6 @@ void NfcState::run(void) {
     switch(state) {
         case IDLE:
             break; // idle is run by timer, but we need to account for it here
-        case CARD_DETECT:
-            nfc.card_detected();
-            break;
-        case DEFAULT_KEY:
-            nfc.default_key_auth();
-            break;
-        case SECURE_KEY:
-            nfc.secure_key_auth();
-            break;
-        case NEW_KEY_AUTH:
-            nfc.new_key_auth();
-            break;
         case UPDATE_KEY:
             nfc.update_key_on_card();
             break;

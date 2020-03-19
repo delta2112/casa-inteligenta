@@ -34,6 +34,7 @@ void Initializer::begin() {
    nfcState.set(IDLE);
 
    nfc.begin();
+
    blynk_timer.setInterval(system_timer_inerval, systemTimerEvent);
    blynk_timer.setInterval(nfc_timer_inerval, nfcTimerEvent);
    blynk_timer.setTimer(blynk_config_timeout, timeoutConfig, 1);

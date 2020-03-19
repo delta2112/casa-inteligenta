@@ -20,75 +20,79 @@ void NFC::begin() {
 }
 
 void NFC::run(void) { // IDLE running on timer
-  if(IDLE == nfcState.get()) {
-    // If no new card just exit run() and save uC processing time
-    if ( ! mfrc522.PICC_IsNewCardPresent()) {
+  if(nfcState.isState(IDLE)) {
+    if ( ! mfrc522.PICC_IsNewCardPresent()) { // If no new card just exit run() and save uC processing time
       return;
     }
-
-    // Read card serial number and return if that fails to save uC processing time
-    if ( ! mfrc522.PICC_ReadCardSerial()) {
+    if ( ! mfrc522.PICC_ReadCardSerial()) { // Read card serial number and return if that fails to save uC processing time
       return;
     }
-    nfcState.set(CARD_DETECT);
-  }
-}
-void NFC::card_detected(void) {
-  if( is_valid_card_type() ) {
-    Blynk.virtualWrite(CHN_VALID_CARD,1);
-    if(received_new_key) {
-      DEBUG_PRINTLN("Authenticating with new key");
-      nfcState.set(NEW_KEY_AUTH);
+    Blynk.virtualWriteBinary(CHN_CARD_UID, mfrc522.uid.uidByte, mfrc522.uid.size); // inform server of new CARD processing UID
+    if( is_valid_card_type() ) {
+      Blynk.virtualWrite(CHN_VALID_CARD,1); // inform server CARD is VALID
     } else {
-      DEBUG_PRINTLN("Authenticating with secure key");
-      nfcState.set(DEFAULT_KEY);
+      Blynk.virtualWrite(CHN_VALID_CARD,0); // inform server CARD is NON-VALID
     }
-  } else {
-    Blynk.virtualWrite(CHN_VALID_CARD,0);
-    nfcState.set(IDLE);
+    if(received_new_key) {
+      if( authenticate_card(READ_KEYA, key, 3) ) { // try new key auth
+        DEBUG_PRINTLN("Authenticated with NEW key");
+        Blynk.virtualWrite(CHN_AUTH,NEW_AUTH_KEY);
+        nfcState.set(READ_DATA);
+      } else {
+        detach_current_card(); // re-init communication to try different key
+        if ( ! mfrc522.PICC_IsNewCardPresent()) return;
+        if ( ! mfrc522.PICC_ReadCardSerial()) return;
+        if( authenticate_card(READ_KEYA, nfc_secure_key_a, 3) ) {
+          DEBUG_PRINTLN("Authenticated with SECURE key");
+          Blynk.virtualWrite(CHN_AUTH,SECURE_AUTH_KEY);
+          nfcState.set(READ_DATA);
+        } else {
+          detach_current_card();
+          if ( ! mfrc522.PICC_IsNewCardPresent()) return;
+          if ( ! mfrc522.PICC_ReadCardSerial()) return;
+          if( authenticate_card(READ_KEYA, nfc_default_key_a, 3) ) {
+            DEBUG_PRINTLN("Authenticated with DEFAULT key");
+            Blynk.virtualWrite(CHN_AUTH,DEFAULT_AUTH_KEY);
+            nfcState.set(READ_DATA);
+          } else {
+            detach_current_card();
+            nfcState.set(IDLE);
+          }
+        }
+      }
+    } else {
+      if( authenticate_card(READ_KEYA, nfc_secure_key_a, 3) ) {
+        DEBUG_PRINTLN("Authenticated with SECURE key");
+        Blynk.virtualWrite(CHN_AUTH,SECURE_AUTH_KEY);
+        nfcState.set(READ_DATA);
+      } else {
+        detach_current_card();
+        if ( ! mfrc522.PICC_IsNewCardPresent()) return;
+        if ( ! mfrc522.PICC_ReadCardSerial()) return;
+        if( authenticate_card(READ_KEYA, nfc_default_key_a, 3) ) {
+          DEBUG_PRINTLN("Authenticated with DEFAULT key");
+          Blynk.virtualWrite(CHN_AUTH,DEFAULT_AUTH_KEY);
+          nfcState.set(READ_DATA);
+        } else {
+          detach_current_card();
+          nfcState.set(IDLE);
+        }
+      }
+    }
   }
-  hex_to_ascii(mfrc522.uid.uidByte, mfrc522.uid.size, uid);
-  DEBUG_PRINT("Card UID: "); DEBUG_PRINTLN(uid);
+}
 
-  Blynk.virtualWriteBinary(CHN_CARD_UID, mfrc522.uid.uidByte, mfrc522.uid.size);
-}
-void NFC::new_key_auth(void){
-  if( authenticate_card(READ_KEYA, key, 3) ) {
-    DEBUG_PRINT("Authenticated with new key");
-    Blynk.virtualWrite(CHN_AUTH,NEW_AUTH_KEY);
-    nfcState.set(READ_DATA);
-  } else {
-    nfcState.set(SECURE_KEY);
-  }
-}
-void NFC::secure_key_auth(void) {
-  if( authenticate_card(READ_KEYA, nfc_secure_key_a, 3) ) {
-    DEBUG_PRINT("Authenticated with secure key");
-    Blynk.virtualWrite(CHN_AUTH,SECURE_AUTH_KEY);
-    nfcState.set(READ_DATA);
-  } else {
-    nfcState.set(DEFAULT_KEY);
-  }
-}
-void NFC::default_key_auth(void) {
-  if( authenticate_card(READ_KEYA, nfc_default_key_a, 3) ) {
-    DEBUG_PRINT("Authenticated with default key");
-    Blynk.virtualWrite(CHN_AUTH,DEFAULT_AUTH_KEY);
-    nfcState.set(UPDATE_KEY);
-  } else {
-    DEBUG_PRINT("Cannot Authenticate with any key");
-    Blynk.virtualWrite(CHN_AUTH,NOT_AUTH);
-    nfcState.set(DETACH);
-  }
-}
 void NFC::set_key_to_update(byte auth) {
   key_to_update = (AuthStatus) auth;
 }
 bool NFC::save_new_key(char buffer[], size_t length) {
   byte string_index = 0;
+  DEBUG_PRINT("RECEIVED NEW KEY: ")
   for( string_index = 0; string_index < length; string_index++ ) {
     key.keyByte[string_index] = buffer[string_index];
+    DEBUG_PRINT(key.keyByte[string_index],HEX);
   }
+  DEBUG_PRINTLN("");
 /*  byte key_index = 0;
   byte nibble = 0;
   if(12 != new_key.length()) {
@@ -120,11 +124,6 @@ bool NFC::authenticate_card(const enum MFRC522::PICC_Command key_type, MFRC522::
   byte i;
 
   status = mfrc522.PCD_Authenticate(key_type, block, &key, &(mfrc522.uid)); //line 834 of MFRC522.cpp file
-
-// key->keyByte[i];
-// uid->uidByte[i+uid->size-4];
-
-
   if (status == MFRC522::STATUS_OK) {
     DEBUG_PRINT("Card detected: ");
     for(i = 0; i < mfrc522.uid.size; i++) {
@@ -137,6 +136,7 @@ bool NFC::authenticate_card(const enum MFRC522::PICC_Command key_type, MFRC522::
     for(i = 0; i < mfrc522.uid.size; i++) {
       DEBUG_PRINT(mfrc522.uid.uidByte[i], HEX) //sak;
     }
+    DEBUG_PRINTLN("\n");
     DEBUG_PRINTLN(mfrc522.GetStatusCodeName(status));
   }
   return false;
@@ -171,8 +171,13 @@ bool NFC::is_valid_card_type() {
   return true;
 }
 void NFC::detach_current_card(void) {
-  mfrc522.PICC_HaltA();
+  MFRC522::StatusCode result;
+  result = mfrc522.PICC_HaltA();
+  if(MFRC522::STATUS_OK != result) {
+    DEBUG_PRINTLN("Cannot HALT communication with card");
+  }
   mfrc522.PCD_StopCrypto1();
+  mfrc522.PCD_Init(SS_PIN, RST_PIN);
 }
 
 void NFC::update_key_on_card(void) {
@@ -197,8 +202,11 @@ void NFC::update_key_on_card(void) {
 }
 
 void NFC::read_data(void) {
+  nfcState.set(IDLE);
+  detach_current_card();
 }
 void NFC::write_data(void) {
+  nfcState.set(IDLE);
 }
 void NFC::reinit(void) {
 }
