@@ -28,15 +28,19 @@ void NFC::run(void) { // IDLE running on timer
       return;
     }
     Blynk.virtualWriteBinary(CHN_CARD_UID, mfrc522.uid.uidByte, mfrc522.uid.size); // inform server of new CARD processing UID
+    // char UID[15];
+    //for(byte uid_index = 0; uid_index< mfrc522.uid.size; uid_index++) {
+    //  char[]
+    //}
     if( is_valid_card_type() ) {
-      Blynk.virtualWrite(CHN_VALID_CARD,1); // inform server CARD is VALID
+      Blynk.virtualWrite(V2,1); // inform server CARD is VALID
     } else {
-      Blynk.virtualWrite(CHN_VALID_CARD,0); // inform server CARD is NON-VALID
+      Blynk.virtualWrite(V2,0); // inform server CARD is NON-VALID
     }
     if(received_new_key) {
       if( authenticate_card(READ_KEYA, key, 3) ) { // try new key auth
         DEBUG_PRINTLN("Authenticated with NEW key");
-        Blynk.virtualWrite(CHN_AUTH,NEW_AUTH_KEY);
+        Blynk.virtualWrite(V3,NEW_AUTH_KEY);
         nfcState.set(READ_DATA);
       } else {
         detach_current_card(); // re-init communication to try different key
@@ -44,7 +48,7 @@ void NFC::run(void) { // IDLE running on timer
         if ( ! mfrc522.PICC_ReadCardSerial()) return;
         if( authenticate_card(READ_KEYA, nfc_secure_key_a, 3) ) {
           DEBUG_PRINTLN("Authenticated with SECURE key");
-          Blynk.virtualWrite(CHN_AUTH,SECURE_AUTH_KEY);
+          Blynk.virtualWrite(V3,SECURE_AUTH_KEY);
           nfcState.set(READ_DATA);
         } else {
           detach_current_card();
@@ -52,7 +56,7 @@ void NFC::run(void) { // IDLE running on timer
           if ( ! mfrc522.PICC_ReadCardSerial()) return;
           if( authenticate_card(READ_KEYA, nfc_default_key_a, 3) ) {
             DEBUG_PRINTLN("Authenticated with DEFAULT key");
-            Blynk.virtualWrite(CHN_AUTH,DEFAULT_AUTH_KEY);
+            Blynk.virtualWrite(V3,DEFAULT_AUTH_KEY);
             nfcState.set(READ_DATA);
           } else {
             detach_current_card();
@@ -63,7 +67,7 @@ void NFC::run(void) { // IDLE running on timer
     } else {
       if( authenticate_card(READ_KEYA, nfc_secure_key_a, 3) ) {
         DEBUG_PRINTLN("Authenticated with SECURE key");
-        Blynk.virtualWrite(CHN_AUTH,SECURE_AUTH_KEY);
+        Blynk.virtualWrite(V3,SECURE_AUTH_KEY);
         nfcState.set(READ_DATA);
       } else {
         detach_current_card();
@@ -71,7 +75,7 @@ void NFC::run(void) { // IDLE running on timer
         if ( ! mfrc522.PICC_ReadCardSerial()) return;
         if( authenticate_card(READ_KEYA, nfc_default_key_a, 3) ) {
           DEBUG_PRINTLN("Authenticated with DEFAULT key");
-          Blynk.virtualWrite(CHN_AUTH,DEFAULT_AUTH_KEY);
+          Blynk.virtualWrite(V3,DEFAULT_AUTH_KEY);
           nfcState.set(READ_DATA);
         } else {
           detach_current_card();
@@ -85,12 +89,15 @@ void NFC::run(void) { // IDLE running on timer
 void NFC::set_key_to_update(byte auth) {
   key_to_update = (AuthStatus) auth;
 }
-bool NFC::save_new_key(char buffer[], size_t length) {
+bool NFC::save_new_key(const unsigned char buffer[], size_t length) {
   byte string_index = 0;
   DEBUG_PRINT("RECEIVED NEW KEY: ")
-  for( string_index = 0; string_index < length; string_index++ ) {
-    key.keyByte[string_index] = buffer[string_index];
-    DEBUG_PRINT(key.keyByte[string_index],HEX);
+  if(ascii_to_byte(buffer, length, key.keyByte)) {
+    DEBUG_PRINT("Key saved correctly");
+    for( string_index = 0; string_index < length; string_index++ ) {
+      DEBUG_PRINT(key.keyByte[string_index]);
+      DEBUG_PRINT(":");
+    }
   }
   DEBUG_PRINTLN("");
 /*  byte key_index = 0;
@@ -221,7 +228,31 @@ bool NFC::change_uid(byte new_uid[4]) {
   return false;
 }
 
-bool NFC::ascii_to_hex(const char digit, byte *destination) {
+bool NFC::ascii_to_byte(const unsigned char *ascii_string, byte size, byte result[]) {
+  bool conversion_result = true;
+  byte string_index = 0, result_index = 0;
+  byte tmp;
+  DEBUG_PRINTLN(String("Received size: ") + size);
+  for(string_index = 0; string_index < size; string_index++) {
+    conversion_result = string_digit_to_byte(ascii_string[string_index++], &tmp);
+    if(conversion_result) result[result_index] = tmp << 4;
+    else {
+      conversion_result = false;
+      break;
+    }
+    conversion_result = string_digit_to_byte(ascii_string[string_index], &tmp);
+    if(conversion_result) result[result_index] |= tmp;
+    else {
+      conversion_result = false;
+      break;
+    }
+    DEBUG_PRINT("Converted byte: "); DEBUG_PRINTLN(result[result_index], HEX);
+    result_index++;
+  }
+  return conversion_result;
+}
+bool NFC::string_digit_to_byte(const char digit, byte *destination) {
+  DEBUG_PRINT("Converting byte: "); DEBUG_PRINTLN(digit);
   if(digit >= 'A' && digit <= 'Z') {
     *destination = digit - 'A' + 10;
     return true;

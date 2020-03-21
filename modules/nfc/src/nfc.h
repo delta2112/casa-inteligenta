@@ -16,9 +16,10 @@ class NFC {
     void begin();                  // initialize nfc module
     void run(void);                // idle loop processing - named "run" for consistency
     bool is_new_processing(void);  // check if this card we attempt to read it before or not
-    bool save_new_key(char[], size_t);   // store received key from Blynk in internal class
+    bool save_new_key(const unsigned char[], size_t); // store received key from Blynk in internal class
                                    // attribute: "key"
-    void set_key_to_update(byte);
+    void set_key_to_update(byte);  // save which key is going to be updated on the an insecure
+                                   // card
     void update_key_on_card(void); // changed key on the Mifare card with "new key"
                                    // stored in "key" attribute
     void read_data(void);          // read data from card
@@ -34,7 +35,8 @@ class NFC {
     bool is_valid_card_type();
     bool change_uid(byte new_uid[4]);
 
-    bool ascii_to_hex(const char digit, byte *destination);
+    bool ascii_to_byte(const unsigned char *, byte, byte []);
+    bool string_digit_to_byte(const char digit, byte *destination);
     unsigned char byte_to_HEX_string(byte byte_number);
     void hex_to_ascii(const unsigned char[], byte, char[]);
 

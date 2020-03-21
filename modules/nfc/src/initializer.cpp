@@ -57,16 +57,16 @@ void timeoutConfig(void) { // config period finished, but device did not receive
    systemState.set(RUNNING);
 }
 
-BLYNK_WRITE(CHN_SECURE_KEY) { // Receiving New Card Secure Key A from server...
+BLYNK_WRITE(V0) { // Receiving New Card Secure Key A from server...
    DEBUG_PRINTLN(String("New A key received: ") + param.asStr());
    systemState.set(CONFIGURING); // stop reading cards, until new key configured
-   nfc.save_new_key((char *)param.getBuffer(), param.getLength()); // save received key
+   nfc.save_new_key((const unsigned char *)param.getBuffer(), param.getLength()); // save received key
    nfcState.set(SAVE_NEW_KEY);  // inform NFC to configure new key
 }
 
-BLYNK_WRITE(CHN_UPDATE_KEY) {
+BLYNK_WRITE(V4) {
+   DEBUG_PRINTLN(String("Update key with: ") + param.asStr());
    nfc.set_key_to_update(param.asInt());
-   DEBUG_PRINTLN(String("Update key with: ") + param.asInt());
    nfcState.set(UPDATE_KEY);
 }
 
