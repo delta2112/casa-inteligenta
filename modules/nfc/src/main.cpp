@@ -2,18 +2,18 @@
 #include "BlynkSimpleStream.h"
 
 #include "debug.h"
-#include "initializer.h"
+#include "initializare.h"
 
 BLYNK_CONNECTED() {
     Blynk.syncAll();
 }
 
 void setup() {
-   deviceInitializer.begin();
+   deviceInitializare.begin();
    Blynk.begin(Serial, blynk_auth);
 }
 
 void loop() {
+   deviceInitializare.run();
    Blynk.run();
-   deviceInitializer.run();
 }

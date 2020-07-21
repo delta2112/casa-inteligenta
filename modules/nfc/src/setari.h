@@ -1,5 +1,5 @@
-#ifndef SESSTINGS_CONFIG_FILE
-#define SESSTINGS_CONFIG_FILE
+#ifndef SETARI_CONFIG_FILE
+#define SETARI_CONFIG_FILE
 
 #include <MFRC522.h>
 
@@ -15,7 +15,7 @@
 #define APP_DEBUG
 
 //Blynk
-constexpr char blynk_auth[] = "bE-vYAT-y3C3C7g8MrzPiaYTgeEsZ653";
+constexpr char blynk_auth[] = "gsgppDv-Tg4RJqCNAKT7hW4QIVgoEcKj";
 constexpr unsigned int blynk_serial_speed = 9600;
 constexpr unsigned long blynk_config_timeout = 5000L;
 
@@ -26,7 +26,7 @@ constexpr byte CHN_AUTH       = V3; // channel to send authentication status bas
 constexpr byte CHN_UPDATE_KEY = V4; // channel to receive request to update the key
 
 // NFC settings
-enum AuthStatus {
+enum ListaStariAuth {
     NOT_AUTH,
     DEFAULT_AUTH_KEY,
     SECURE_AUTH_KEY,
@@ -43,8 +43,8 @@ constexpr unsigned char debug_serial_rx = 3;
 constexpr unsigned char debug_serial_tx = 4;
 constexpr unsigned int  debug_speed     = 38400;
 
-constexpr unsigned long system_timer_inerval = 1000L;
-constexpr unsigned long nfc_timer_inerval = 500L;
+constexpr unsigned long system_timer_interval = 1000L;
+constexpr unsigned long nfc_timer_interval = 500L;
 
 constexpr MFRC522::MIFARE_Key nfc_default_key_a = {.keyByte = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}}; // All keys "A" are set to FFFFFFFFFFFFh at delivery from factory.
 constexpr MFRC522::MIFARE_Key nfc_default_key_b = {.keyByte = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}}; // All keys "B" are set to FFFFFFFFFFFFh at delivery from factory.
