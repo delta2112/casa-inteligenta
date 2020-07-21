@@ -1,8 +1,8 @@
-#ifndef STATE_MGMT_CONFIG_FILE
-#define STATE_MGMT_CONFIG_FILE
+#ifndef STARI_MGMT_CONFIG_FILE
+#define STARI_MGMT_CONFIG_FILE
 
 #include "debug.h"
-enum SystemStatesList {
+enum ListaStariSystem {
     WAIT_CONFIG,
     CONFIGURING,
     RUNNING,
@@ -12,7 +12,7 @@ enum SystemStatesList {
     MAX_SYSTEM_CONFIG_VALUE // keep this entry the last one to use as "length" of enum
                             // for other defines
 };
-enum NfcStatesList {
+enum ListaStariNfc {
     IDLE,        // waiting for things to happen
     UPDATE_KEY,  // and the new presented card
     SAVE_NEW_KEY,// save it inside the class "key" attribute
@@ -27,50 +27,50 @@ enum NfcStatesList {
 };
 
 #if defined(APP_DEBUG)
-extern const char* SystemStateStr[];
-extern const char* NfcStateStr[];
+extern const char* StareSystemStr[];
+extern const char* StareNfcStr[];
 #endif
 
 template <typename T>
-class State {
+class Stare {
     protected:
-        volatile T state;
+        volatile T stare;
     #if defined(APP_DEBUG)
-        const char** StateStr;
+        const char** StareStr;
     #endif
 
     public:
-        T get() { return state; }
-        bool isState(T new_state) { return (state == new_state); }
-        void set(T new_state) {
-            if (state != new_state) {  // change state only if different from current one
-                DEBUG_PRINTLN(String(StateStr[state]) + " => " + StateStr[new_state]);
-                state = new_state;
+        T get() { return stare; }
+        bool isState(T stare_noua) { return (stare == stare_noua); }
+        void set(T stare_noua) {
+            if (stare != stare_noua) {  // change state only if different from current one
+                DEBUG_PRINTLN(String(StareStr[stare]) + " => " + StareStr[stare_noua]);
+                stare = stare_noua;
             }
         }
         virtual void run(void);
 };
 
-class SystemState: public State<SystemStatesList> {
+class StareSystem: public Stare<ListaStariSystem> {
     public:
         #if defined(APP_DEBUG)
-        SystemState(void) {
-            StateStr = SystemStateStr;
+        StareSystem(void) {
+            StareStr = StareSystemStr;
         }
         #endif
         void run(void);
 };
-class NfcState: public State<NfcStatesList> {
+class StareNfc: public Stare<ListaStariNfc> {
     public:
         #if defined(APP_DEBUG)
-        NfcState(void) {
-            StateStr = NfcStateStr;
+        StareNfc(void) {
+            StareStr = StareNfcStr;
         }
         #endif
         void run(void);
 };
 
-extern SystemState systemState;
-extern NfcState    nfcState;
+extern StareSystem stareSystem;
+extern StareNfc stareNfc;
 
-#endif  // STATE_MGMT_CONFIG_FILE
+#endif  // STARI_MGMT_CONFIG_FILE

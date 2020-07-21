@@ -1,10 +1,10 @@
 #ifndef NFC_CONFIG_FILE
 #define NFC_CONFIG_FILE
-
+ 
 #include <SPI.h>
 #include <MFRC522.h>
 
-#include "settings.h"
+#include "setari.h"
 #include "debug.h"
 
 constexpr enum MFRC522::PICC_Command READ_KEYA = MFRC522::PICC_Command::PICC_CMD_MF_AUTH_KEY_A;
@@ -45,7 +45,7 @@ class NFC {
     MFRC522::MIFARE_Key key;
     bool received_new_key = false;
     bool updateKey = false;
-    AuthStatus key_to_update;
+    ListaStariAuth key_to_update;
 
     char uid[7];
     bool new_processing = false;
