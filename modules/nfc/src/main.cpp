@@ -13,6 +13,7 @@ void setup() {
    Blynk.begin(Serial, blynk_auth);
 }
 
+
 void loop() {
    deviceInitializare.run();
    Blynk.run();
