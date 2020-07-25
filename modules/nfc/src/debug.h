@@ -10,7 +10,7 @@ extern SoftwareSerial debug_serial;
 #define DEBUG_PRINTLN(...) debug_serial.println(__VA_ARGS__);
 #else
 #define DEBUG_PRINT(...)   ;
-define DEBUG_PRINTLN(...) ;
+#define DEBUG_PRINTLN(...) ;
 #endif
 
 #endif
