@@ -48,7 +48,6 @@ class Stare {
                 stare = stare_noua;
             }
         }
-        virtual void run(void);
 };
 
 class StareSystem: public Stare<ListaStariSystem> {
@@ -58,7 +57,6 @@ class StareSystem: public Stare<ListaStariSystem> {
             StareStr = StareSystemStr;
         }
         #endif
-        void run(void);
 };
 class StareNfc: public Stare<ListaStariNfc> {
     public:
@@ -67,10 +65,6 @@ class StareNfc: public Stare<ListaStariNfc> {
             StareStr = StareNfcStr;
         }
         #endif
-        void run(void);
 };
-
-extern StareSystem stareSystem;
-extern StareNfc stareNfc;
 
 #endif  // STARI_MGMT_CONFIG_FILE

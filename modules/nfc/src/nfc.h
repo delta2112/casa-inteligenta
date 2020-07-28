@@ -15,6 +15,7 @@ class NFC {
     NFC();                         // constructor to initialize internal "key" with 0x00
     void begin();                  // initialize nfc module
     void run(void);                // idle loop processing - named "run" for consistency
+    void processNewCard(void);
     bool is_new_processing(void);  // check if this card we attempt to read it before or not
     bool save_new_key(const unsigned char[], size_t); // store received key from Blynk in internal class
                                    // attribute: "key"
@@ -41,6 +42,7 @@ class NFC {
     void hex_to_ascii(const unsigned char[], byte, char[]);
 
     MFRC522 mfrc522;
+    StareNfc stare;
 
     MFRC522::MIFARE_Key key;
     bool received_new_key = false;

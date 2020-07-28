@@ -3,6 +3,7 @@
 
 #include "setari.h"
 #include "stari-mgmt.h"
+#include "dispozitiv.h"
 #include "nfc.h"
 
 class Initializare {

@@ -29,10 +29,7 @@ void Initializare::begin() {
    #define BLYNK_PRINT debug_serial
 #endif
    Serial.begin(blynk_serial_speed);
-   // Initializare state machine
-   stareSystem.set(WAIT_CONFIG);
-   stareNfc.set(IDLE);
-
+   dispozitiv.begin();
    nfc.begin();
 
    blynk_timer.setInterval(system_timer_interval, systemTimerEvent);
@@ -41,7 +38,7 @@ void Initializare::begin() {
 }
 
 void systemTimerEvent(void) {
-   if(RUNNING == stareSystem.get()) {
+   if(dispozitiv.isRunning()) {
       nfc.run();
    }
 }
@@ -54,24 +51,21 @@ void timeoutConfig(void) { // config period finished, but device did not receive
                            // configuration from server, so run with default config
    DEBUG_PRINTLN("Config not received in timeout");
    DEBUG_PRINTLN("Relying on default configuration");
-   stareSystem.set(RUNNING);
+   dispozitiv.configurareNePrimita();
 }
 
 BLYNK_WRITE(V0) { // Receiving New Card Secure Key A from server...
    DEBUG_PRINTLN(String("New A key received: ") + param.asStr());
-   stareSystem.set(CONFIGURING); // stop reading cards, until new key configured
-   nfc.save_new_key((const unsigned char *)param.getBuffer(), param.getLength()); // save received key
-   stareNfc.set(SAVE_NEW_KEY);  // inform NFC to configure new key
+   dispozitiv.primitConfigurare((const unsigned char *)param.getBuffer(), param.getLength()); // stop reading cards, until new key configured
 }
 
 BLYNK_WRITE(V4) {
    DEBUG_PRINTLN(String("Update key with: ") + param.asStr());
    nfc.set_key_to_update(param.asInt());
-   stareNfc.set(UPDATE_KEY);
 }
 
 void Initializare::run() {
-   stareSystem.run();
-   stareNfc.run();
+   dispozitiv.run();
+   nfc.run();
    blynk_timer.run();
 }
