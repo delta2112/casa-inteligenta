@@ -15,21 +15,23 @@ class NFC {
     NFC();                         // constructor to initialize internal "key" with 0x00
     void begin();                  // initialize nfc module
     void run(void);                // idle loop processing - named "run" for consistency
-    void processNewCard(void);
+
     bool is_new_processing(void);  // check if this card we attempt to read it before or not
     bool save_new_key(const unsigned char[], size_t); // store received key from Blynk in internal class
                                    // attribute: "key"
-    void set_key_to_update(byte);  // save which key is going to be updated on the an insecure
-                                   // card
+    void set_key_to_update(byte);  // save which key is going to be updated on the insecure card
+
+  private:
+    void processNewCard(void);
+    void autentificare(void);
     void update_key_on_card(void); // changed key on the Mifare card with "new key"
                                    // stored in "key" attribute
     void read_data(void);          // read data from card
     void write_data(void);         // write data to card
-    void reinit(void);             // 
     void detach_current_card(void);
+    void reinit(void);             // 
     void error(void);              // 
 
-  private:
     bool authenticate_card(const enum MFRC522::PICC_Command, MFRC522::MIFARE_Key, byte);
     bool read_block(byte block_number, byte buffer[18]);
     bool write_block(byte block_number, byte buffer[16]);

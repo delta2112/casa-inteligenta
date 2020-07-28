@@ -67,34 +67,20 @@ void NFC::processNewCard(void) {
     } else {
       Blynk.virtualWrite(V2,0); // inform server CARD is NON-VALID
     }
-    if(received_new_key) {
-      if( authenticate_card(READ_KEYA, key, 3) ) { // try new key auth
-        DEBUG_PRINTLN("Authenticated with NEW key");
-        Blynk.virtualWrite(V3,NEW_AUTH_KEY);
-        stare.set(READ_DATA);
-      } else {
-        detach_current_card(); // re-init communication to try different key
-        if ( ! mfrc522.PICC_IsNewCardPresent()) return;
-        if ( ! mfrc522.PICC_ReadCardSerial()) return;
-        if( authenticate_card(READ_KEYA, nfc_secure_key_a, 3) ) {
-          DEBUG_PRINTLN("Authenticated with SECURE key");
-          Blynk.virtualWrite(V3,SECURE_AUTH_KEY);
-          stare.set(READ_DATA);
-        } else {
-          detach_current_card();
-          if ( ! mfrc522.PICC_IsNewCardPresent()) return;
-          if ( ! mfrc522.PICC_ReadCardSerial()) return;
-          if( authenticate_card(READ_KEYA, nfc_default_key_a, 3) ) {
-            DEBUG_PRINTLN("Authenticated with DEFAULT key");
-            Blynk.virtualWrite(V3,DEFAULT_AUTH_KEY);
-            stare.set(READ_DATA);
-          } else {
-            detach_current_card();
-            stare.set(IDLE);
-          }
-        }
-      }
+    autentificare();
+  }
+}
+
+void NFC::autentificare(void) {
+  if(received_new_key) {
+    if( authenticate_card(READ_KEYA, key, 3) ) { // try new key auth
+      DEBUG_PRINTLN("Authenticated with NEW key");
+      Blynk.virtualWrite(V3,NEW_AUTH_KEY);
+      stare.set(READ_DATA);
     } else {
+      detach_current_card(); // re-init communication to try different key
+      if ( ! mfrc522.PICC_IsNewCardPresent()) return;
+      if ( ! mfrc522.PICC_ReadCardSerial()) return;
       if( authenticate_card(READ_KEYA, nfc_secure_key_a, 3) ) {
         DEBUG_PRINTLN("Authenticated with SECURE key");
         Blynk.virtualWrite(V3,SECURE_AUTH_KEY);
@@ -111,6 +97,24 @@ void NFC::processNewCard(void) {
           detach_current_card();
           stare.set(IDLE);
         }
+      }
+    }
+  } else {
+    if( authenticate_card(READ_KEYA, nfc_secure_key_a, 3) ) {
+      DEBUG_PRINTLN("Authenticated with SECURE key");
+      Blynk.virtualWrite(V3,SECURE_AUTH_KEY);
+      stare.set(READ_DATA);
+    } else {
+      detach_current_card();
+      if ( ! mfrc522.PICC_IsNewCardPresent()) return;
+      if ( ! mfrc522.PICC_ReadCardSerial()) return;
+      if( authenticate_card(READ_KEYA, nfc_default_key_a, 3) ) {
+        DEBUG_PRINTLN("Authenticated with DEFAULT key");
+        Blynk.virtualWrite(V3,DEFAULT_AUTH_KEY);
+        stare.set(READ_DATA);
+      } else {
+        detach_current_card();
+        stare.set(IDLE);
       }
     }
   }
