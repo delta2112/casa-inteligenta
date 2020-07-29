@@ -17,10 +17,40 @@ NFC::NFC() {
 void NFC::begin() {
   SPI.begin();
   mfrc522.PCD_Init(SS_PIN, RST_PIN);
+  // Initializare machin de stari
+  stare.set(IDLE);
 }
 
 void NFC::run(void) { // IDLE running on timer
-  if(stareNfc.isState(IDLE)) {
+    switch(stare.get()) {
+        case IDLE:
+            processNewCard();
+            break;
+        case UPDATE_KEY:
+            update_key_on_card();
+            break;
+        case SAVE_NEW_KEY:
+            //save_new_key();
+            break;
+        case READ_DATA:
+            read_data();
+            break;
+        case WRITE_DATA:
+            write_data();
+            break;
+        case DETACH:
+            detach_current_card();
+            break;
+        case NFC_ERROR:
+            reinit();
+            break;
+        default:
+            error();
+    }
+}
+
+void NFC::processNewCard(void) {
+  if(stare.isState(IDLE)) {
     if ( ! mfrc522.PICC_IsNewCardPresent()) { // If no new card just exit run() and save uC processing time
       return;
     }
@@ -37,38 +67,24 @@ void NFC::run(void) { // IDLE running on timer
     } else {
       Blynk.virtualWrite(V2,0); // inform server CARD is NON-VALID
     }
-    if(received_new_key) {
-      if( authenticate_card(READ_KEYA, key, 3) ) { // try new key auth
-        DEBUG_PRINTLN("Authenticated with NEW key");
-        Blynk.virtualWrite(V3,NEW_AUTH_KEY);
-        stareNfc.set(READ_DATA);
-      } else {
-        detach_current_card(); // re-init communication to try different key
-        if ( ! mfrc522.PICC_IsNewCardPresent()) return;
-        if ( ! mfrc522.PICC_ReadCardSerial()) return;
-        if( authenticate_card(READ_KEYA, nfc_secure_key_a, 3) ) {
-          DEBUG_PRINTLN("Authenticated with SECURE key");
-          Blynk.virtualWrite(V3,SECURE_AUTH_KEY);
-          stareNfc.set(READ_DATA);
-        } else {
-          detach_current_card();
-          if ( ! mfrc522.PICC_IsNewCardPresent()) return;
-          if ( ! mfrc522.PICC_ReadCardSerial()) return;
-          if( authenticate_card(READ_KEYA, nfc_default_key_a, 3) ) {
-            DEBUG_PRINTLN("Authenticated with DEFAULT key");
-            Blynk.virtualWrite(V3,DEFAULT_AUTH_KEY);
-            stareNfc.set(READ_DATA);
-          } else {
-            detach_current_card();
-            stareNfc.set(IDLE);
-          }
-        }
-      }
+    autentificare();
+  }
+}
+
+void NFC::autentificare(void) {
+  if(received_new_key) {
+    if( authenticate_card(READ_KEYA, key, 3) ) { // try new key auth
+      DEBUG_PRINTLN("Authenticated with NEW key");
+      Blynk.virtualWrite(V3,NEW_AUTH_KEY);
+      stare.set(READ_DATA);
     } else {
+      detach_current_card(); // re-init communication to try different key
+      if ( ! mfrc522.PICC_IsNewCardPresent()) return;
+      if ( ! mfrc522.PICC_ReadCardSerial()) return;
       if( authenticate_card(READ_KEYA, nfc_secure_key_a, 3) ) {
         DEBUG_PRINTLN("Authenticated with SECURE key");
         Blynk.virtualWrite(V3,SECURE_AUTH_KEY);
-        stareNfc.set(READ_DATA);
+        stare.set(READ_DATA);
       } else {
         detach_current_card();
         if ( ! mfrc522.PICC_IsNewCardPresent()) return;
@@ -76,11 +92,29 @@ void NFC::run(void) { // IDLE running on timer
         if( authenticate_card(READ_KEYA, nfc_default_key_a, 3) ) {
           DEBUG_PRINTLN("Authenticated with DEFAULT key");
           Blynk.virtualWrite(V3,DEFAULT_AUTH_KEY);
-          stareNfc.set(READ_DATA);
+          stare.set(READ_DATA);
         } else {
           detach_current_card();
-          stareNfc.set(IDLE);
+          stare.set(IDLE);
         }
+      }
+    }
+  } else {
+    if( authenticate_card(READ_KEYA, nfc_secure_key_a, 3) ) {
+      DEBUG_PRINTLN("Authenticated with SECURE key");
+      Blynk.virtualWrite(V3,SECURE_AUTH_KEY);
+      stare.set(READ_DATA);
+    } else {
+      detach_current_card();
+      if ( ! mfrc522.PICC_IsNewCardPresent()) return;
+      if ( ! mfrc522.PICC_ReadCardSerial()) return;
+      if( authenticate_card(READ_KEYA, nfc_default_key_a, 3) ) {
+        DEBUG_PRINTLN("Authenticated with DEFAULT key");
+        Blynk.virtualWrite(V3,DEFAULT_AUTH_KEY);
+        stare.set(READ_DATA);
+      } else {
+        detach_current_card();
+        stare.set(IDLE);
       }
     }
   }
@@ -205,15 +239,15 @@ void NFC::update_key_on_card(void) {
         // TODO: notify card uses default key (not secure!!)
       }
   }
-  stareNfc.set(DETACH);
+  stare.set(DETACH);
 }
 
 void NFC::read_data(void) {
-  stareNfc.set(IDLE);
+  stare.set(IDLE);
   detach_current_card();
 }
 void NFC::write_data(void) {
-  stareNfc.set(IDLE);
+  stare.set(IDLE);
 }
 void NFC::reinit(void) {
 }
