@@ -1,6 +1,8 @@
 #ifndef STARI_MGMT_CONFIG_FILE
 #define STARI_MGMT_CONFIG_FILE
 
+#include <string.h>
+
 #include "debug.h"
 enum ListaStariSystem {
     WAIT_CONFIG,
@@ -44,7 +46,7 @@ class Stare {
         bool isState(T stare_noua) { return (stare == stare_noua); }
         void set(T stare_noua) {
             if (stare != stare_noua) {  // change state only if different from current one
-                DEBUG_PRINTLN(String(StareStr[stare]) + " => " + StareStr[stare_noua]);
+                DEBUG_PRINT(StareStr[stare]); DEBUG_PRINT(" => "); DEBUG_PRINTLN(StareStr[stare_noua]);
                 stare = stare_noua;
             }
         }

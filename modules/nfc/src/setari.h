@@ -15,7 +15,7 @@
 #define APP_DEBUG
 
 //Blynk
-constexpr char blynk_auth[] = "gsgppDv-Tg4RJqCNAKT7hW4QIVgoEcKj";
+constexpr char blynk_auth[] = "bE-vYAT-y3C3C7g8MrzPiaYTgeEsZ653";
 constexpr unsigned int blynk_serial_speed = 9600;
 constexpr unsigned long blynk_config_timeout = 5000L;
 
@@ -24,6 +24,9 @@ constexpr byte CHN_CARD_UID   = V1; // channel to send UID of detected card to B
 constexpr byte CHN_VALID_CARD = V2; // channel to send card validity to Blynk
 constexpr byte CHN_AUTH       = V3; // channel to send authentication status based on auth enum
 constexpr byte CHN_UPDATE_KEY = V4; // channel to receive request to update the key
+
+constexpr int CHN_DEBUG = V10; // canal mesaje de debug
+constexpr int LUNGIME_MAXIMA_MESAJ_DEBUG=50; // lungimea maxima a mesajului de debug
 
 // NFC settings
 enum ListaStariAuth {

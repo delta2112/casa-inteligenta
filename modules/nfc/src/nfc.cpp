@@ -124,12 +124,12 @@ void NFC::set_key_to_update(byte auth) {
   key_to_update = (ListaStariAuth) auth;
 }
 bool NFC::save_new_key(const unsigned char buffer[], size_t length) {
-  byte string_index = 0;
+  unsigned int string_index = 0;
   DEBUG_PRINT("RECEIVED NEW KEY: ")
   if(ascii_to_byte(buffer, length, key.keyByte)) {
     DEBUG_PRINT("Key saved correctly");
     for( string_index = 0; string_index < length; string_index++ ) {
-      DEBUG_PRINT(key.keyByte[string_index]);
+      DEBUG_PRINT( String(key.keyByte[string_index]).c_str() );
       DEBUG_PRINT(":");
     }
   }
@@ -168,14 +168,14 @@ bool NFC::authenticate_card(const enum MFRC522::PICC_Command key_type, MFRC522::
   if (status == MFRC522::STATUS_OK) {
     DEBUG_PRINT("Card detected: ");
     for(i = 0; i < mfrc522.uid.size; i++) {
-      DEBUG_PRINT(mfrc522.uid.uidByte[i], HEX) //sak;
+      DEBUG_PRINT( String(mfrc522.uid.uidByte[i]).c_str() ); //sak
     }
-    DEBUG_PRINTLN("\n")
+    DEBUG_PRINTLN("")
     return true;
   } else {
     DEBUG_PRINT(F("Authentication failed for: "));
     for(i = 0; i < mfrc522.uid.size; i++) {
-      DEBUG_PRINT(mfrc522.uid.uidByte[i], HEX) //sak;
+      DEBUG_PRINT( String(mfrc522.uid.uidByte[i]).c_str() ); //sak
     }
     DEBUG_PRINTLN("\n");
     DEBUG_PRINTLN(mfrc522.GetStatusCodeName(status));
@@ -198,11 +198,11 @@ bool NFC::read_block(byte block_number, byte buffer[18]) {
 }
 bool NFC::is_valid_card_type() {
   MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
-  DEBUG_PRINT(F("PICC type: "));
+  DEBUG_PRINT("PICC type: ");
   DEBUG_PRINT(mfrc522.PICC_GetTypeName(piccType));
-  DEBUG_PRINT(F(" (SAK "));
-  DEBUG_PRINT(mfrc522.uid.sak);
-  DEBUG_PRINT(")\r\n");
+  DEBUG_PRINT(" (SAK ");
+  DEBUG_PRINT( String(mfrc522.uid.sak).c_str() );
+  DEBUG_PRINTLN(")");
   if (  piccType != MFRC522::PICC_TYPE_MIFARE_MINI 
     &&  piccType != MFRC522::PICC_TYPE_MIFARE_1K
     &&  piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
@@ -232,7 +232,7 @@ void NFC::update_key_on_card(void) {
     /// g3 < Access bits C1 C2 C3] for the sector trailer, block 3 (for sectors 0-31) or block 15 (for sectors 32-39)
 
         for(byte i = 0; i < 16; i++) {
-          DEBUG_PRINT(card_data_buffer[i], HEX);
+          DEBUG_PRINT( String(card_data_buffer[i]).c_str() );
           DEBUG_PRINT(" ");
         }
         DEBUG_PRINTLN("\n");
@@ -256,7 +256,7 @@ void NFC::error(void) {
 
 bool NFC::change_uid(byte new_uid[4]) {
   if ( mfrc522.MIFARE_SetUid(new_uid, (byte)4, true) ) {
-    DEBUG_PRINTLN(F("Wrote new UID to card."));
+    DEBUG_PRINTLN("Wrote new UID to card.");
     return true;
   }
   return false;
@@ -266,7 +266,7 @@ bool NFC::ascii_to_byte(const unsigned char *ascii_string, byte size, byte resul
   bool conversion_result = true;
   byte string_index = 0, result_index = 0;
   byte tmp;
-  DEBUG_PRINTLN(String("Received size: ") + size);
+  DEBUG_PRINTLN(String(String("Received size: ") + size).c_str() );
   for(string_index = 0; string_index < size; string_index++) {
     conversion_result = string_digit_to_byte(ascii_string[string_index++], &tmp);
     if(conversion_result) result[result_index] = tmp << 4;
@@ -280,13 +280,13 @@ bool NFC::ascii_to_byte(const unsigned char *ascii_string, byte size, byte resul
       conversion_result = false;
       break;
     }
-    DEBUG_PRINT("Converted byte: "); DEBUG_PRINTLN(result[result_index], HEX);
+    DEBUG_PRINT("Converted byte: "); DEBUG_PRINTLN( String(result[result_index]).c_str() );
     result_index++;
   }
   return conversion_result;
 }
 bool NFC::string_digit_to_byte(const char digit, byte *destination) {
-  DEBUG_PRINT("Converting byte: "); DEBUG_PRINTLN(digit);
+  DEBUG_PRINT("Converting byte: "); DEBUG_PRINTLN( String(digit).c_str() );
   if(digit >= 'A' && digit <= 'Z') {
     *destination = digit - 'A' + 10;
     return true;

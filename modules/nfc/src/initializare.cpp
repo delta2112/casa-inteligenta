@@ -22,9 +22,9 @@ void timeoutConfig(void);
 void Initializare::begin() {
 #if defined(APP_DEBUG)
    debug_serial.begin(debug_speed);
-   DEBUG_PRINTLN("Hardware v"  + String(NFC_FW_VER));
-   DEBUG_PRINTLN("Firmware v"  + String(NFC_HW_VER));
-   DEBUG_PRINTLN("NFC Shield " + String(NFC_SHIELD));
+   DEBUG_PRINT("Hardware v "); DEBUG_PRINTLN( String(NFC_FW_VER).c_str() );
+   DEBUG_PRINT("Firmware v "); DEBUG_PRINTLN( String(NFC_HW_VER).c_str() );
+   DEBUG_PRINT("NFC Shield "); DEBUG_PRINTLN( String(NFC_SHIELD).c_str() );
 
    #define BLYNK_PRINT debug_serial
 #endif
@@ -55,12 +55,12 @@ void timeoutConfig(void) { // config period finished, but device did not receive
 }
 
 BLYNK_WRITE(V0) { // Receiving New Card Secure Key A from server...
-   DEBUG_PRINTLN(String("New A key received: ") + param.asStr());
+   DEBUG_PRINT("New A key received: "); DEBUG_PRINTLN(param.asStr() );
    dispozitiv.primitConfigurare((const unsigned char *)param.getBuffer(), param.getLength()); // stop reading cards, until new key configured
 }
 
 BLYNK_WRITE(V4) {
-   DEBUG_PRINTLN(String("Update key with: ") + param.asStr());
+   DEBUG_PRINT("Update key with: "); DEBUG_PRINTLN( param.asStr() );
    nfc.set_key_to_update(param.asInt());
 }
 
