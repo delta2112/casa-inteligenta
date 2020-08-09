@@ -81,8 +81,7 @@ BLYNK_WRITE(CHN_CONFIG_KEY_TO_UPDATE) {
    nfc.set_key_to_update(param.asInt());
 }
 
-/*
-BLYNK_WRITE(V7) {
+BLYNK_WRITE(CHN_ZAVOR) {
    int zavor = param.asInt();
    if( zavor == 1 ) {
       DEBUG_PRINTLN("Dezactivare zavor");
@@ -90,7 +89,7 @@ BLYNK_WRITE(V7) {
       blynk_timer.setTimer(zavor_config_timeout, timeout_zavor, 1);
    }
 }
-*/
+
 void Initializare::run() {
    dispozitiv.run();
    nfc.run();
