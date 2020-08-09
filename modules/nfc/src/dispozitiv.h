@@ -11,6 +11,7 @@ class Dispozitiv {
         bool isRunning(void);
         void configurareNePrimita(void);
         void primitConfigurare(const unsigned char buffer[], size_t length);
+        void configurare_terminata(void);
     private:
         StareSystem stare;
 };

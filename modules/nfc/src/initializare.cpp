@@ -12,11 +12,7 @@ SoftwareSerial debug_serial(debug_serial_rx,debug_serial_tx);
 #endif
 
 BlynkTimer blynk_timer;
-
-// Time related functions
-void systemTimerEvent(void);
-void nfcTimerEvent(void);
-void timeoutConfig(void);
+char blynk_buffer[20];
 
 // Class Functions - Methods
 void Initializare::begin() {
@@ -26,44 +22,75 @@ void Initializare::begin() {
    DEBUG_PRINT("Firmware v "); DEBUG_PRINTLN( String(NFC_HW_VER).c_str() );
    DEBUG_PRINT("NFC Shield "); DEBUG_PRINTLN( String(NFC_SHIELD).c_str() );
 
-   #define BLYNK_PRINT debug_serial
+   //#define BLYNK_PRINT debug_serial
 #endif
-   Serial.begin(blynk_serial_speed);
-   dispozitiv.begin();
-   nfc.begin();
 
-   blynk_timer.setInterval(system_timer_interval, systemTimerEvent);
-   blynk_timer.setInterval(nfc_timer_interval, nfcTimerEvent);
-   blynk_timer.setTimer(blynk_config_timeout, timeoutConfig, 1);
+   // seriala folosita in comunicare cu serverul Blynk
+   Serial.begin(blynk_serial_speed);
+
+   // initializare pin zavor
+   pinMode(PIN_ZAVOR,OUTPUT);
+   digitalWrite(PIN_ZAVOR,LOW); // zavor inchis initial
+
+   dispozitiv.begin(); // initializare completa dispozitiv
+   nfc.begin();        // initializare modul nfc
+
+   // configurare timere folosite
+   blynk_timer.setInterval(system_timer_interval, system_timer);
+   blynk_timer.setInterval(nfc_timer_interval, nfc_timer);
+   blynk_timer.setTimer(blynk_config_timeout, timeout_config, 1);
 }
 
-void systemTimerEvent(void) {
+void system_timer(void) { // masina stari sistem (dispozitiv) e executata pe acest timer
+   dispozitiv.run();
+}
+
+void nfc_timer(void) { // masina stari nfc e executata pe acest timer
+   // Blynk.virtualWrite(V5, millis() / 1000);
    if(dispozitiv.isRunning()) {
       nfc.run();
    }
 }
 
-void nfcTimerEvent(void) {
-      // Blynk.virtualWrite(V5, millis() / 1000);
-}
-
-void timeoutConfig(void) { // config period finished, but device did not receive
+void timeout_config(void) { // timer pentru a astepta cheia secreta
                            // configuration from server, so run with default config
-   DEBUG_PRINTLN("Config not received in timeout");
-   DEBUG_PRINTLN("Relying on default configuration");
-   dispozitiv.configurareNePrimita();
+   if( nfc.cheie_noua_primita() ) {
+      DEBUG_PRINTLN("Timeout terminat cu succes - cheie secreta receptionata")
+   } else {
+      DEBUG_PRINTLN("Config not received in timeout");
+      DEBUG_PRINTLN("Relying on default configuration");
+      dispozitiv.configurareNePrimita();
+   }
 }
 
-BLYNK_WRITE(V0) { // Receiving New Card Secure Key A from server...
-   DEBUG_PRINT("New A key received: "); DEBUG_PRINTLN(param.asStr() );
-   dispozitiv.primitConfigurare((const unsigned char *)param.getBuffer(), param.getLength()); // stop reading cards, until new key configured
+void timeout_zavor(void) { // timer ca sa inchida zavorul dupa un interval prestabilit
+   digitalWrite(PIN_ZAVOR,LOW);
+   DEBUG_PRINTLN("Activare zavor");
 }
 
-BLYNK_WRITE(V4) {
-   DEBUG_PRINT("Update key with: "); DEBUG_PRINTLN( param.asStr() );
+BLYNK_WRITE(CHN_SECURE_KEY) { // Receptie cheie sigura de la aplicatie
+   DEBUG_PRINT("Cheie noua primita (HEX): "); DEBUG_PRINTLN(param.asStr() );
+   dispozitiv.primitConfigurare((const unsigned char *)param.getBuffer(), param.getLength());
+}
+
+BLYNK_WRITE(CHN_UPDATE_OR_NO_KEY) {
+   nfc.set_permite_update_cheie(param.asInt());
+}
+
+BLYNK_WRITE(CHN_CONFIG_KEY_TO_UPDATE) {
    nfc.set_key_to_update(param.asInt());
 }
 
+/*
+BLYNK_WRITE(V7) {
+   int zavor = param.asInt();
+   if( zavor == 1 ) {
+      DEBUG_PRINTLN("Dezactivare zavor");
+      digitalWrite(PIN_ZAVOR, zavor);
+      blynk_timer.setTimer(zavor_config_timeout, timeout_zavor, 1);
+   }
+}
+*/
 void Initializare::run() {
    dispozitiv.run();
    nfc.run();

@@ -14,21 +14,27 @@
 
 #define APP_DEBUG
 
-//Blynk
+// Blynk
 constexpr char blynk_auth[] = "bE-vYAT-y3C3C7g8MrzPiaYTgeEsZ653";
 constexpr unsigned int blynk_serial_speed = 9600;
-constexpr unsigned long blynk_config_timeout = 5000L;
+constexpr unsigned long blynk_config_timeout = 10000L;
+constexpr unsigned int zavor_config_timeout = 5000;
 
-constexpr byte CHN_SECURE_KEY = V0; // channel for new key sent from Blynk to arduino
-constexpr byte CHN_CARD_UID   = V1; // channel to send UID of detected card to Blynk
-constexpr byte CHN_VALID_CARD = V2; // channel to send card validity to Blynk
-constexpr byte CHN_AUTH       = V3; // channel to send authentication status based on auth enum
-constexpr byte CHN_UPDATE_KEY = V4; // channel to receive request to update the key
+#define CHN_SECURE_KEY           V0 // canal pentru receptie cheie sigura de la server Blynk
+#define CHN_UPDATE_OR_NO_KEY     V1 // canal pentru receptie daca sa updatam cheia de pe card sau nu (1/0)
+#define CHN_CONFIG_KEY_TO_UPDATE V2 // canal pentru receptie care cheie sa o punem pe card (1/2/3 = cheie fabrica, cheie repository, cheie sigura)
+#define CHN_ZAVOR                V3 // canal pentru receptie deschiderea manuala a zavorului
 
-constexpr int CHN_DEBUG = V10; // canal mesaje de debug
-constexpr int LUNGIME_MAXIMA_MESAJ_DEBUG=50; // lungimea maxima a mesajului de debug
+#define CHN_CARD_UID   V10 // canal pentru transmitere UID card la server Blynk
+#define CHN_VALID_CARD V11 // canal pentru transmitere daca cardul e valid sau nu la server Blynk (1/0)
+#define CHN_AUTH       V12 // canal pentru transmiterea starii de autentificare la server Blynk (1/0)
+
+// Dispozitiv
+constexpr byte PIN_ZAVOR = 2; // pin unde releul pentru zavor este conectat
 
 // NFC settings
+constexpr byte BLOC_AUTENTIFICARE = 3; // acest bloc e folosit pentru verificarea autentificarii
+
 enum ListaStariAuth {
     NOT_AUTH,
     DEFAULT_AUTH_KEY,

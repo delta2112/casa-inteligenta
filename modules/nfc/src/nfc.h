@@ -20,9 +20,12 @@ class NFC {
     bool save_new_key(const unsigned char[], size_t); // store received key from Blynk in internal class
                                    // attribute: "key"
     void set_key_to_update(byte);  // save which key is going to be updated on the insecure card
+    void set_permite_update_cheie(byte);
+
+    bool cheie_noua_primita(void);
 
   private:
-    void processNewCard(void);
+    bool verifica_card_nou(void);
     void autentificare(void);
     void update_key_on_card(void); // changed key on the Mifare card with "new key"
                                    // stored in "key" attribute
@@ -48,11 +51,10 @@ class NFC {
 
     MFRC522::MIFARE_Key key;
     bool received_new_key = false;
-    bool updateKey = false;
+    bool update_key = false;
     ListaStariAuth key_to_update;
 
     char uid[7];
-    bool new_processing = false;
     byte card_data_buffer[18];
 };
 

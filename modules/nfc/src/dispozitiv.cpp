@@ -9,6 +9,7 @@ void Dispozitiv::begin(void) {
 void Dispozitiv::run(void) { // this is the actual stare machine of the application
    switch (stare.get()) {
       case WAIT_CONFIG:
+         DEBUG_PRINTLN("Astept Configurare");
          break;
       case CONFIGURING:
          stare.set(CONFIGURING);
@@ -17,6 +18,8 @@ void Dispozitiv::run(void) { // this is the actual stare machine of the applicat
          break;
       case RESET_CONFIG:
          break;
+      case SYSTEM_ERROR:
+         DEBUG_PRINTLN("Eroare => Reseteaza Dispozitiv!");
       default:
          stare.set(SYSTEM_ERROR);
          break;
@@ -34,5 +37,10 @@ void Dispozitiv::configurareNePrimita(void) {
 };
 
 void Dispozitiv::primitConfigurare(const unsigned char buffer[], size_t length) {
+   stare.set(CONFIGURING);
    nfc.save_new_key(buffer, length); // save received key
+}
+
+void Dispozitiv::configurare_terminata(void) {
+   stare.set(RUNNING);
 }
