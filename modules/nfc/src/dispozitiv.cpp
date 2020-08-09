@@ -9,7 +9,7 @@ void Dispozitiv::begin(void) {
 void Dispozitiv::run(void) { // this is the actual stare machine of the application
    switch (stare.get()) {
       case WAIT_CONFIG:
-         DEBUG_PRINTLN("Astept Configurare");
+         //DEBUG_PRINTLN("Astept Configurare");
          break;
       case CONFIGURING:
          stare.set(CONFIGURING);
@@ -19,7 +19,7 @@ void Dispozitiv::run(void) { // this is the actual stare machine of the applicat
       case RESET_CONFIG:
          break;
       case SYSTEM_ERROR:
-         DEBUG_PRINTLN("Eroare => Reseteaza Dispozitiv!");
+         //DEBUG_PRINTLN("Eroare => Reseteaza Dispozitiv!");
       default:
          stare.set(SYSTEM_ERROR);
          break;

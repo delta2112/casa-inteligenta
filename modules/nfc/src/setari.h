@@ -14,11 +14,18 @@
 
 #define APP_DEBUG
 
+#ifdef APP_DEBUG
+    constexpr bool debug = true;
+#else
+    constexpr bool debug = false;
+#endif
+
 // Blynk
 constexpr char blynk_auth[] = "bE-vYAT-y3C3C7g8MrzPiaYTgeEsZ653";
 constexpr unsigned int blynk_serial_speed = 9600;
 constexpr unsigned long blynk_config_timeout = 10000L;
 constexpr unsigned int zavor_config_timeout = 5000;
+constexpr unsigned int autentificare_timeout = 2000;
 
 #define CHN_SECURE_KEY           V0 // canal pentru receptie cheie sigura de la server Blynk
 #define CHN_UPDATE_OR_NO_KEY     V1 // canal pentru receptie daca sa updatam cheia de pe card sau nu (1/0)

@@ -24,6 +24,9 @@ class NFC {
 
     bool cheie_noua_primita(void);
 
+    void activare_functionalitate(void); // cat timp functionarea nu-i activa, nu ne putem autentifica
+    void configureaza_idle(void); // schimba starea la IDLE
+
   private:
     bool verifica_card_nou(void);
     void autentificare(void);
@@ -36,6 +39,7 @@ class NFC {
     void error(void);              // 
 
     bool authenticate_card(const enum MFRC522::PICC_Command, MFRC522::MIFARE_Key, byte);
+    void config_intarziere_autentificare();
     bool read_block(byte block_number, byte buffer[18]);
     bool write_block(byte block_number, byte buffer[16]);
     bool is_valid_card_type();

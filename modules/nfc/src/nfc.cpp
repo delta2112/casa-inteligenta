@@ -31,26 +31,107 @@ void NFC::run(void) { // IDLE running on timer
             }
             break;
         case UPDATE_KEY:
-            update_key_on_card();
+            // update_key_on_card();
             break;
         case SAVE_NEW_KEY:
             //save_new_key();
             break;
-        case READ_DATA:
-            read_data();
-            break;
-        case WRITE_DATA:
-            write_data();
-            break;
         case DETACH:
-            detach_current_card();
+            //detach_current_card();
             break;
         case NFC_ERROR:
             reinit();
             break;
         default:
-            error();
+            break;
     }
+}
+
+void NFC::autentificare(void) {
+  bool autentificat = false;
+  if(received_new_key) { // cheia noua, sigura, a fost receptionata
+    // incercam autentificarea cu cheia noua (sigura)
+    // primita de la aplicatie si salvata in membrul clasei
+    // cu numele "key"
+    if( authenticate_card(READ_KEYA, key, BLOC_AUTENTIFICARE) ) {
+      autentificat = true;
+      DEBUG_PRINTLN("Ne-am autentificat cu cheia sigura");
+      if( update_key ) {
+        update_key_on_card();
+      } else {
+        digitalWrite(PIN_ZAVOR,HIGH);
+        blynk_timer.setTimer(zavor_config_timeout, timeout_zavor, 1);
+        Blynk.virtualWrite(CHN_AUTH,NEW_AUTH_KEY); // informam serverul ca autentificarea a fost reusita
+      }
+    } else {
+      detach_current_card(); // trebuie reinitializata comunicatia cu cardul pentru a incerca o cheie noua
+      if(! verifica_card_nou()) { // dupa deconectare cardul trebuie sa se re-connecteze (se comporta ca un card nou)
+        // daca acest card nu s-a reconectat, nu mai putem face nimic
+        config_intarziere_autentificare();
+        detach_current_card();
+        return;
+      }
+    }
+  }
+  if(! autentificat) { // autentificarea cu cheia noua nu a fost posibila
+    // incercam autentificarea cu cheia din repository (nfc_secure_key_a din setari.h)
+    if( authenticate_card(READ_KEYA, nfc_secure_key_a, BLOC_AUTENTIFICARE) ) {
+      if( update_key ) {
+        update_key_on_card();
+      } else {
+        if(debug) {
+          autentificat = true;
+          DEBUG_PRINTLN("Ne-am autentificat cu cheia din repository");
+          Blynk.virtualWrite(CHN_AUTH,SECURE_AUTH_KEY);
+          digitalWrite(PIN_ZAVOR,HIGH);
+          blynk_timer.setTimer(zavor_config_timeout, timeout_zavor, 1);
+          Blynk.virtualWrite(CHN_AUTH,NEW_AUTH_KEY); // informam serverul ca autentificarea a fost reusita
+        }
+      }
+    } else { // autentificarea cu cheia din repository nu a fost posibila
+      detach_current_card(); // trebuie reinitializata comunicatia cu cardul pentru a incerca o cheie noua
+      if(! verifica_card_nou()) { // dupa deconectare cardul trebuie sa se re-connecteze (se comporta ca un card nou)
+        // daca acest card nu s-a reconectat, nu mai putem face nimic
+        config_intarziere_autentificare();
+        detach_current_card();
+        return;
+      }
+    }
+  }
+  if(! autentificat) { // autentificarea cu cheia noua sau cea din repository nu a fost posibila
+    // incercam autentificarea cu cheia implicita din fabrica (nfc_default_key_a din setari.h)
+    if( authenticate_card(READ_KEYA, nfc_default_key_a, BLOC_AUTENTIFICARE) ) {
+      autentificat = true;
+      DEBUG_PRINTLN("Autentificat cu cheia din fabrica");
+      Blynk.virtualWrite(CHN_AUTH,DEFAULT_AUTH_KEY);
+      if(update_key) {
+        update_key_on_card();
+      } else {
+        config_intarziere_autentificare();
+        detach_current_card();
+      }
+    } else {
+      config_intarziere_autentificare();
+      detach_current_card();
+    }
+  }
+}
+
+void NFC::update_key_on_card(void) {
+  stare.set(DETACH);
+  if( update_key) {
+    DEBUG_PRINT("Schibam cheia pe card cu: "); DEBUG_PRINTLN(key_to_update);
+
+    if( read_block(3, card_data_buffer) ) {
+      //mfrc522.MIFARE_SetAccessBits(	&(card_data_buffer[6]),(byte)0b000, (byte)0b0000, (byte)0b000, (byte)0b0001 );
+    /// g0 < Access bits [C1 C2 C3] for block 0 (for sectors 0-31) or blocks 0-4 (for sectors 32-39)
+    /// g1 < Access bits C1 C2 C3] for block 1 (for sectors 0-31) or blocks 5-9 (for sectors 32-39)
+    /// g2 < Access bits C1 C2 C3] for block 2 (for sectors 0-31) or blocks 10-14 (for sectors 32-39)
+    /// g3 < Access bits C1 C2 C3] for the sector trailer, block 3 (for sectors 0-31) or block 15 (for sectors 32-39)
+
+    }
+  }
+  stare.set(IDLE);
 }
 
 bool NFC::verifica_card_nou(void) {
@@ -72,60 +153,6 @@ bool NFC::verifica_card_nou(void) {
   return result;
 }
 
-void NFC::autentificare(void) {
-  bool autentificat = false;
-  if(received_new_key) { // cheia noua, sigura, a fost receptionata
-    // incercam autentificarea cu cheia noua (sigura)
-    // primita de la aplicatie si salvata in membrul clasei
-    // cu numele "key"
-    if( authenticate_card(READ_KEYA, key, BLOC_AUTENTIFICARE) ) {
-      autentificat = true;
-      DEBUG_PRINTLN("Ne-am autentificat cu cheia sigura");
-      digitalWrite(PIN_ZAVOR,HIGH);
-      blynk_timer.setTimer(zavor_config_timeout, timeout_zavor, 1);
-      Blynk.virtualWrite(CHN_AUTH,NEW_AUTH_KEY); // informam serverul ca autentificarea a fost reusita
-    } else {
-      detach_current_card(); // trebuie reinitializata comunicatia cu cardul pentru a incerca o cheie noua
-      if(! verifica_card_nou()) { // dupa deconectare cardul trebuie sa se re-connecteze (se comporta ca un card nou)
-        // daca acest card nu s-a reconectat, nu mai putem face nimic
-        return;
-      }
-    }
-  }
-  if(! autentificat) { // autentificarea cu cheia noua nu a fost posibila
-    // incercam autentificarea cu cheia din repository (nfc_secure_key_a din setari.h)
-    if( authenticate_card(READ_KEYA, nfc_secure_key_a, BLOC_AUTENTIFICARE) ) {
-      if(received_new_key && NEW_AUTH_KEY == key_to_update) {
-        
-      }
-      if( SECURE_AUTH_KEY == key_to_update || DEFAULT_AUTH_KEY == key_to_update) {
-        autentificat = true;
-        DEBUG_PRINTLN("Ne-am autentificat cu cheia din repository");
-        Blynk.virtualWrite(CHN_AUTH,SECURE_AUTH_KEY);
-      } else {
-
-      }
-    } else { // autentificarea cu cheia din repository nu a fost posibila
-      detach_current_card(); // trebuie reinitializata comunicatia cu cardul pentru a incerca o cheie noua
-      if(! verifica_card_nou()) { // dupa deconectare cardul trebuie sa se re-connecteze (se comporta ca un card nou)
-        // daca acest card nu s-a reconectat, nu mai putem face nimic
-        return;
-      }
-    }
-  }
-  if(! autentificat) { // autentificarea cu cheia noua sau cea din repository nu a fost posibila
-    // incercam autentificarea cu cheia implicita din fabrica (nfc_default_key_a din setari.h)
-    if( authenticate_card(READ_KEYA, nfc_default_key_a, BLOC_AUTENTIFICARE) ) {
-      autentificat = true;
-      DEBUG_PRINTLN("Authenticated with DEFAULT key");
-      Blynk.virtualWrite(CHN_AUTH,DEFAULT_AUTH_KEY);
-    } else {
-      detach_current_card();
-      stare.set(IDLE);
-    }
-  }
-}
-
 void NFC::set_key_to_update(byte auth) {
   key_to_update = (ListaStariAuth) auth;
   DEBUG_PRINT("Cheie pe care o schimbam pe card: "); DEBUG_PRINTLN(auth);
@@ -142,7 +169,7 @@ bool NFC::save_new_key(const unsigned char buffer[], size_t length) {
   if(ascii_to_byte(buffer, length, key.keyByte)) {
     DEBUG_PRINT("Cheie salvata corect: ");
     for( string_index = 0; string_index < length/2; string_index++ ) {
-      DEBUG_PRINT( String(key.keyByte[string_index]).c_str() );
+      DEBUG_PRINT( key.keyByte[string_index] );
       DEBUG_PRINT(":");
     }
     DEBUG_PRINTLN("");
@@ -166,7 +193,7 @@ bool NFC::authenticate_card(const enum MFRC522::PICC_Command key_type, MFRC522::
     DEBUG_PRINT(("Autentificare esuata: "));
   }
   for(i = 0; i < mfrc522.uid.size; i++) {
-    DEBUG_PRINT( String(mfrc522.uid.uidByte[i]).c_str() ); //sak
+    DEBUG_PRINT( mfrc522.uid.uidByte[i] ); //sak
     DEBUG_PRINT( ":" );
   }
   DEBUG_PRINTLN("")
@@ -199,7 +226,7 @@ bool NFC::is_valid_card_type() {
   DEBUG_PRINT("Tip PICC (Card): ");
   DEBUG_PRINT(mfrc522.PICC_GetTypeName(piccType));
   DEBUG_PRINT(" (SAK ");
-  DEBUG_PRINT( String(mfrc522.uid.sak).c_str() );
+  DEBUG_PRINT( mfrc522.uid.sak );
   DEBUG_PRINTLN(")");
   if (  piccType != MFRC522::PICC_TYPE_MIFARE_MINI 
     &&  piccType != MFRC522::PICC_TYPE_MIFARE_1K
@@ -220,25 +247,14 @@ void NFC::detach_current_card(void) {
   mfrc522.PCD_Init(SS_PIN, RST_PIN);
 }
 
-void NFC::update_key_on_card(void) {
-  if( update_key) {
-    // if( use new key )
-    if( read_block(3, card_data_buffer) ) {
-    mfrc522.MIFARE_SetAccessBits(	&(card_data_buffer[6]),(byte)0b000, (byte)0b0000, (byte)0b000, (byte)0b0001 );
-    /// g0 < Access bits [C1 C2 C3] for block 0 (for sectors 0-31) or blocks 0-4 (for sectors 32-39)
-    /// g1 < Access bits C1 C2 C3] for block 1 (for sectors 0-31) or blocks 5-9 (for sectors 32-39)
-    /// g2 < Access bits C1 C2 C3] for block 2 (for sectors 0-31) or blocks 10-14 (for sectors 32-39)
-    /// g3 < Access bits C1 C2 C3] for the sector trailer, block 3 (for sectors 0-31) or block 15 (for sectors 32-39)
-
-        for(byte i = 0; i < 16; i++) {
-          DEBUG_PRINT( String(card_data_buffer[i]).c_str() );
-          DEBUG_PRINT(" ");
-        }
-        DEBUG_PRINTLN("\n");
-        // TODO: notify card uses default key (not secure!!)
-      }
-  }
+void NFC::config_intarziere_autentificare(void) {
+  blynk_timer.setTimer(autentificare_timeout, timeout_autentificare, 1);
   stare.set(DETACH);
+  DEBUG_PRINT("Dezactivare autentificare pentru: "); DEBUG_PRINTLN(autentificare_timeout);
+}
+void NFC::configureaza_idle(void) { // timer ca sa inchida zavorul dupa un interval prestabilit
+   stare.set(IDLE);
+   DEBUG_PRINTLN("Activare autentificare");
 }
 
 void NFC::read_data(void) {

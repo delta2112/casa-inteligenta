@@ -18,9 +18,9 @@ char blynk_buffer[20];
 void Initializare::begin() {
 #if defined(APP_DEBUG)
    debug_serial.begin(debug_speed);
-   DEBUG_PRINT("Hardware v "); DEBUG_PRINTLN( String(NFC_FW_VER).c_str() );
-   DEBUG_PRINT("Firmware v "); DEBUG_PRINTLN( String(NFC_HW_VER).c_str() );
-   DEBUG_PRINT("NFC Shield "); DEBUG_PRINTLN( String(NFC_SHIELD).c_str() );
+//   DEBUG_PRINT("Hardware v "); DEBUG_PRINTLN( String(NFC_FW_VER).c_str() );
+//   DEBUG_PRINT("Firmware v "); DEBUG_PRINTLN( String(NFC_HW_VER).c_str() );
+//   DEBUG_PRINT("NFC Shield "); DEBUG_PRINTLN( String(NFC_SHIELD).c_str() );
 
    //#define BLYNK_PRINT debug_serial
 #endif
@@ -55,21 +55,25 @@ void nfc_timer(void) { // masina stari nfc e executata pe acest timer
 void timeout_config(void) { // timer pentru a astepta cheia secreta
                            // configuration from server, so run with default config
    if( nfc.cheie_noua_primita() ) {
-      DEBUG_PRINTLN("Timeout terminat cu succes - cheie secreta receptionata")
+      //DEBUG_PRINTLN("Timeout terminat cu succes - cheie secreta receptionata")
    } else {
-      DEBUG_PRINTLN("Config not received in timeout");
-      DEBUG_PRINTLN("Relying on default configuration");
+      //DEBUG_PRINTLN("Cheie secreta nereceptionata");
+      //DEBUG_PRINTLN("Folosim cheie din repository");
       dispozitiv.configurareNePrimita();
    }
 }
 
 void timeout_zavor(void) { // timer ca sa inchida zavorul dupa un interval prestabilit
    digitalWrite(PIN_ZAVOR,LOW);
-   DEBUG_PRINTLN("Activare zavor");
+   //DEBUG_PRINTLN("Activare zavor");
+}
+
+void timeout_autentificare(void) { // apelata de timer ca sa activeze functionalitatea
+   nfc.configureaza_idle();
 }
 
 BLYNK_WRITE(CHN_SECURE_KEY) { // Receptie cheie sigura de la aplicatie
-   DEBUG_PRINT("Cheie noua primita (HEX): "); DEBUG_PRINTLN(param.asStr() );
+   //DEBUG_PRINT("Cheie noua primita (HEX): "); DEBUG_PRINTLN(param.asStr() );
    dispozitiv.primitConfigurare((const unsigned char *)param.getBuffer(), param.getLength());
 }
 
@@ -84,7 +88,7 @@ BLYNK_WRITE(CHN_CONFIG_KEY_TO_UPDATE) {
 BLYNK_WRITE(CHN_ZAVOR) {
    int zavor = param.asInt();
    if( zavor == 1 ) {
-      DEBUG_PRINTLN("Dezactivare zavor");
+      //DEBUG_PRINTLN("Dezactivare zavor");
       digitalWrite(PIN_ZAVOR, zavor);
       blynk_timer.setTimer(zavor_config_timeout, timeout_zavor, 1);
    }
