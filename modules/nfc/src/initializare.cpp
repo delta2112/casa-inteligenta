@@ -18,24 +18,22 @@ char blynk_buffer[20];
 void Initializare::begin() {
    #ifdef ARDUINO_AVR_UNO
       Serial.begin(blynk_serial_speed); // seriala folosita in comunicare cu serverul Blynk
-      Blynk.begin(Serial, blynk_auth);
-   #endif
-   #ifdef ARDUINO_ESP8266_WEMOS_D1MINILITE
-      Blynk.begin(blynk_auth, ssid, pass); // WiFi folosit in comunicare cu serverul Blynk
-   #endif
-
-   #ifdef APP_DEBUG
-      #ifdef ARDUINO_AVR_UNO
+      #ifdef APP_DEBUG
          debug_serial.begin(debug_speed); // seriala soft folosita pentru debug
          #define BLYNK_PRINT debug_serial
       #endif
-      #ifdef ARDUINO_ESP8266_WEMOS_D1MINILITE
+      Blynk.begin(Serial, blynk_auth);
+   #endif
+
+   #ifdef ARDUINO_ESP8266_WEMOS_D1MINILITE
+      #ifdef APP_DEBUG
          Serial.begin(blynk_serial_speed); // seriala hard folosita pentru debug (prin usb - serial monitor)
          #define BLYNK_PRINT Serial
          DEBUG_PRINT("Hardware v "); DEBUG_PRINTLN( String(NFC_FW_VER).c_str() );
          DEBUG_PRINT("Firmware v "); DEBUG_PRINTLN( String(NFC_HW_VER).c_str() );
          DEBUG_PRINT("NFC Shield "); DEBUG_PRINTLN( String(NFC_SHIELD).c_str() );
       #endif
+      Blynk.begin(blynk_auth, ssid, pass); // WiFi folosit in comunicare cu serverul Blynk
    #endif
 
    // initializare pin zavor
