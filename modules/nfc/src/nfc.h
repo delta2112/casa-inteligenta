@@ -59,7 +59,7 @@ class NFC {
     ListaStariAuth key_to_update;
 
     char uid[7];
-    byte card_data_buffer[18];
+    byte card_data_buffer[18]; // trebuie sa fie 18 ca sa poata citi libraria. Doar 16 sunt folositi
 };
 
 extern NFC nfc;

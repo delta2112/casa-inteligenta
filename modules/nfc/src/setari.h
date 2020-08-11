@@ -3,7 +3,15 @@
 
 #include <MFRC522.h>
 
-#include "BlynkSimpleStream.h"
+#ifdef ARDUINO_AVR_ATmega328P
+    #include "BlynkSimpleStream.h"
+#endif
+
+#ifdef ARDUINO_ESP8266_WEMOS_D1MINILITE
+    #include <BlynkSimpleEsp8266.h>
+    #include "secrete.h"
+#endif
+
 
 #define NFC_FW_VER "1.0"
 #define NFC_HW_VER "1.0"
@@ -25,7 +33,7 @@ constexpr char blynk_auth[] = "bE-vYAT-y3C3C7g8MrzPiaYTgeEsZ653";
 constexpr unsigned int blynk_serial_speed = 9600;
 constexpr unsigned long blynk_config_timeout = 10000L;
 constexpr unsigned int zavor_config_timeout = 5000;
-constexpr unsigned int autentificare_timeout = 2000;
+constexpr unsigned int autentificare_timeout = 3000;
 
 #define CHN_SECURE_KEY           V0 // canal pentru receptie cheie sigura de la server Blynk
 #define CHN_UPDATE_OR_NO_KEY     V1 // canal pentru receptie daca sa updatam cheia de pe card sau nu (1/0)
@@ -67,6 +75,7 @@ constexpr MFRC522::MIFARE_Key nfc_default_key_b = {.keyByte = {0xFF, 0xFF, 0xFF,
 //constexpr MFRC522::MIFARE_Key nfc_default_key_b = {.keyByte = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7}};
 
 constexpr MFRC522::MIFARE_Key nfc_secure_key_a = {.keyByte = {0xCA, 0xFE, 0xDB, 0x91, 0x64, 0x37}}; // Private keys
+//constexpr MFRC522::MIFARE_Key nfc_secure_key_a = {.keyByte = {0x37, 0x64, 0x91, 0xDB, 0xFE, 0xCA}}; // Private keys
 constexpr MFRC522::MIFARE_Key nfc_secure_key_b = {.keyByte = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7}};
 
 #endif

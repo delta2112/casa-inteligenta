@@ -122,16 +122,36 @@ void NFC::update_key_on_card(void) {
   if( update_key) {
     DEBUG_PRINT("Schibam cheia pe card cu: "); DEBUG_PRINTLN(key_to_update);
 
-    if( read_block(3, card_data_buffer) ) {
+    if( read_block(BLOC_AUTENTIFICARE, card_data_buffer) ) {
+      for( int i=15; i>=0; i--) {
+        DEBUG_PRINT(card_data_buffer[i]);
+        DEBUG_PRINT(":");
+      }
+      DEBUG_PRINTLN("");
+      for( int i=10; i<16; i++) {
+        card_data_buffer[i] = nfc_secure_key_a.keyByte[i-10];
+      }
+      for( int i=15; i>=0; i--) {
+        DEBUG_PRINT(card_data_buffer[i]);
+        DEBUG_PRINT(":");
+      }
+      DEBUG_PRINTLN("");
+      write_block(BLOC_AUTENTIFICARE, card_data_buffer);
+      //255:255:255:255:255:255:105:128:7:255:0:0:0:0:0:0:
+      //55:100:145:219:254:202:105:128:7:255:0:0:0:0:0:0:
+
       //mfrc522.MIFARE_SetAccessBits(	&(card_data_buffer[6]),(byte)0b000, (byte)0b0000, (byte)0b000, (byte)0b0001 );
     /// g0 < Access bits [C1 C2 C3] for block 0 (for sectors 0-31) or blocks 0-4 (for sectors 32-39)
     /// g1 < Access bits C1 C2 C3] for block 1 (for sectors 0-31) or blocks 5-9 (for sectors 32-39)
     /// g2 < Access bits C1 C2 C3] for block 2 (for sectors 0-31) or blocks 10-14 (for sectors 32-39)
     /// g3 < Access bits C1 C2 C3] for the sector trailer, block 3 (for sectors 0-31) or block 15 (for sectors 32-39)
 
+    } else {
+      DEBUG_PRINTLN("READ BLOCK FAILED!!!");
     }
   }
-  stare.set(IDLE);
+  config_intarziere_autentificare();
+  detach_current_card();
 }
 
 bool NFC::verifica_card_nou(void) {
@@ -199,7 +219,7 @@ bool NFC::authenticate_card(const enum MFRC522::PICC_Command key_type, MFRC522::
   DEBUG_PRINTLN("")
 
   if(status != MFRC522::STATUS_OK) {
-    DEBUG_PRINT("Eroare autentiricare: ");
+    DEBUG_PRINT("Eroare autentificare: ");
     DEBUG_PRINTLN(mfrc522.GetStatusCodeName(status));
   }
 
@@ -215,7 +235,22 @@ bool NFC::read_block(byte block_number, byte buffer[18]) {
   if (status == MFRC522::STATUS_OK) {
     return true;
   } else {
-    DEBUG_PRINT(F("Reading failed: "));
+    DEBUG_PRINT("Citire esuata: ");
+    DEBUG_PRINTLN(mfrc522.GetStatusCodeName(status));
+  }
+  return false;
+}
+
+bool NFC::write_block(byte block_number, byte buffer[16]) {
+  MFRC522::StatusCode status;
+
+  byte len = 16;
+
+  status = mfrc522.MIFARE_Write(block_number, buffer, len);
+  if (status == MFRC522::STATUS_OK) {
+    return true;
+  } else {
+    DEBUG_PRINT("Scriere Esuata: ");
     DEBUG_PRINTLN(mfrc522.GetStatusCodeName(status));
   }
   return false;
@@ -252,6 +287,7 @@ void NFC::config_intarziere_autentificare(void) {
   stare.set(DETACH);
   DEBUG_PRINT("Dezactivare autentificare pentru: "); DEBUG_PRINTLN(autentificare_timeout);
 }
+
 void NFC::configureaza_idle(void) { // timer ca sa inchida zavorul dupa un interval prestabilit
    stare.set(IDLE);
    DEBUG_PRINTLN("Activare autentificare");
