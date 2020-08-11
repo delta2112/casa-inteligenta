@@ -1,6 +1,5 @@
-#include "BlynkSimpleStream.h"
-
-#ifdef ARDUINO_AVR_ATmega328P
+#ifdef ARDUINO_AVR_UNO
+    #include "BlynkSimpleStream.h"
     BlynkTransportStream _blynkTransport;
     BlynkStream Blynk(_blynkTransport);
 #endif

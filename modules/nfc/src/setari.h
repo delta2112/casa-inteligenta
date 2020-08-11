@@ -3,15 +3,15 @@
 
 #include <MFRC522.h>
 
-#ifdef ARDUINO_AVR_ATmega328P
+#ifdef ARDUINO_AVR_UNO
     #include "BlynkSimpleStream.h"
 #endif
 
 #ifdef ARDUINO_ESP8266_WEMOS_D1MINILITE
     #include <BlynkSimpleEsp8266.h>
-    #include "secrete.h"
 #endif
 
+#include "secrete.h"
 
 #define NFC_FW_VER "1.0"
 #define NFC_HW_VER "1.0"
@@ -59,8 +59,15 @@ enum ListaStariAuth {
                             // for other defines
 };
 
-constexpr unsigned char RST_PIN = 9;
-constexpr unsigned char SS_PIN = 10;
+#ifdef ARDUINO_AVR_UNO
+    constexpr unsigned char RST_PIN = 9;
+    constexpr unsigned char SS_PIN  = 10;
+#endif
+
+#ifdef ARDUINO_ESP8266_WEMOS_D1MINILITE
+    constexpr unsigned char RST_PIN = D3;
+    constexpr unsigned char SS_PIN  = D8;
+#endif
 
 constexpr unsigned char debug_serial_rx = 3;
 constexpr unsigned char debug_serial_tx = 4;

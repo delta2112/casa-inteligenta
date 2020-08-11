@@ -16,7 +16,7 @@ NFC::NFC() {
 void NFC::begin() {
   SPI.begin();
   mfrc522.PCD_Init(SS_PIN, RST_PIN);
-  // Initializare machin de stari
+  // Initializare machina de stari
   stare.set(IDLE);
 }
 

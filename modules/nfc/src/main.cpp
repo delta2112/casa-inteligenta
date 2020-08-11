@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#ifdef ARDUINO_AVR_ATmega328P
+#ifdef ARDUINO_AVR_UNO
    #include "BlynkSimpleStream.h"
 #endif
 #ifdef ARDUINO_ESP8266_WEMOS_D1MINILITE
@@ -17,15 +17,7 @@ BLYNK_CONNECTED() {
 
 void setup() {
    deviceInitializare.begin();
-   #ifdef ARDUINO_AVR_ATmega328P
-      Serial.begin(9600);
-      Blynk.begin(Serial, blynk_auth);
-   #endif
-   #ifdef ARDUINO_ESP8266_WEMOS_D1MINILITE
-      Blynk.begin(blynk_auth, ssid, pass);
-   #endif
 }
-
 
 void loop() {
    deviceInitializare.run();
