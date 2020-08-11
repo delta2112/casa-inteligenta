@@ -17,10 +17,13 @@ BLYNK_CONNECTED() {
 
 void setup() {
    deviceInitializare.begin();
-   Blynk.begin(Serial, blynk_auth);
-   Serial.begin(9600);
-   Blynk.begin(auth, ssid, pass);
-
+   #ifdef ARDUINO_AVR_ATmega328P
+      Serial.begin(9600);
+      Blynk.begin(Serial, blynk_auth);
+   #endif
+   #ifdef ARDUINO_ESP8266_WEMOS_D1MINILITE
+      Blynk.begin(blynk_auth, ssid, pass);
+   #endif
 }
 
 

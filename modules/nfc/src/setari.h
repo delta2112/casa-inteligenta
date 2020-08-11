@@ -29,7 +29,6 @@
 #endif
 
 // Blynk
-constexpr char blynk_auth[] = "bE-vYAT-y3C3C7g8MrzPiaYTgeEsZ653";
 constexpr unsigned int blynk_serial_speed = 9600;
 constexpr unsigned long blynk_config_timeout = 10000L;
 constexpr unsigned int zavor_config_timeout = 5000;

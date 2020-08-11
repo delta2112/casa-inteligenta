@@ -26,6 +26,8 @@
 #include <Adapters/BlynkArduinoClient.h>
 #include <ESP8266WiFi.h>
 
+#include <Arduino.h>
+
 class BlynkWifi
     : public BlynkProtocol<BlynkArduinoClient>
 {
@@ -95,7 +97,7 @@ public:
 
 };
 
-extern BlynkWifi Blynk(_blynkTransport);
+extern BlynkWifi Blynk;
 
 #include <BlynkWidgets.h>
 

@@ -1,6 +1,3 @@
-// #include <Blynk/BlynkApi.h>
-
-#include "BlynkSimpleStream.h"
 #include "debug.h"
 #include "setari.h"
 #include "stari-mgmt.h"
