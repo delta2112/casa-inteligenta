@@ -18,10 +18,7 @@ enum ListaStariNfc {
     IDLE,        // waiting for things to happen
     UPDATE_KEY,  // and the new presented card
     SAVE_NEW_KEY,// save it inside the class "key" attribute
-    READ_DATA,   // read data from card
-    WRITE_DATA,  // write data to card
-    DETACH,      // communication finished, no other actions needed, detach card
-
+    WAIT,        // asteapta timeoutul configurat
     NFC_ERROR,   // nfc working error
 
     MAX_NFC_CONFIG_VALUE // keep this entry the last one to use as "length" of enum

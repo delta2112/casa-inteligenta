@@ -21,20 +21,21 @@ void NFC::begin() {
 }
 
 void NFC::run(void) { // IDLE running on timer
-    switch(stare.get()) {
+  ListaStariNfc stare_curenta = stare.get();
+    switch(stare_curenta) {
         case IDLE:
             if(verifica_card_nou()) {
               autentificare();
             }
             break;
         case UPDATE_KEY:
-            // update_key_on_card();
+            if(autentificat) {
+              update_key_on_card();
+            }
             break;
-        case SAVE_NEW_KEY:
-            //save_new_key();
-            break;
-        case DETACH:
-            //detach_current_card();
+        case WAIT: // in aceasta stare asteptam sa treaca un timeout pentru
+                   // a putea trece la urmatoarea procesare ca sa nu ajunga
+                   // din nou in IDLE, sau in starea curenta
             break;
         case NFC_ERROR:
             reinit();
@@ -45,27 +46,24 @@ void NFC::run(void) { // IDLE running on timer
 }
 
 void NFC::autentificare(void) {
-  bool autentificat = false;
+  stare.set(WAIT);
+  autentificat = false;
   if(received_new_key) { // cheia noua, sigura, a fost receptionata
     // incercam autentificarea cu cheia noua (sigura)
     // primita de la aplicatie si salvata in membrul clasei
     // cu numele "key"
     if( authenticate_card(READ_KEYA, key, BLOC_AUTENTIFICARE) ) {
       autentificat = true;
+      acces_permis = true;
       DEBUG_PRINTLN("Ne-am autentificat cu cheia sigura");
-      if( update_key ) {
-        update_key_on_card();
-      } else {
-        digitalWrite(PIN_ZAVOR,HIGH);
-        blynk_timer.setTimer(zavor_config_timeout, timeout_zavor, 1);
-        Blynk.virtualWrite(CHN_AUTH,NEW_AUTH_KEY); // informam serverul ca autentificarea a fost reusita
-      }
+      DEBUG_PRINTLN("Accesul este permis");
+      Blynk.virtualWrite(CHN_AUTH,SECURE_AUTH_KEY); // informam serverul ca autentificarea a fost reusita
     } else {
       detach_current_card(); // trebuie reinitializata comunicatia cu cardul pentru a incerca o cheie noua
       if(! verifica_card_nou()) { // dupa deconectare cardul trebuie sa se re-connecteze (se comporta ca un card nou)
         // daca acest card nu s-a reconectat, nu mai putem face nimic
-        config_intarziere_autentificare();
-        detach_current_card();
+        DEBUG_PRINT("___auth1 ");
+        config_intarziere_intoarcere_la_idle(TIMEOUT_INTRE_AUTENTIFICARE_SI_IDLE);
         return;
       }
     }
@@ -73,24 +71,19 @@ void NFC::autentificare(void) {
   if(! autentificat) { // autentificarea cu cheia noua nu a fost posibila
     // incercam autentificarea cu cheia din repository (nfc_secure_key_a din setari.h)
     if( authenticate_card(READ_KEYA, nfc_secure_key_a, BLOC_AUTENTIFICARE) ) {
-      if( update_key ) {
-        update_key_on_card();
-      } else {
-        if(debug) {
-          autentificat = true;
-          DEBUG_PRINTLN("Ne-am autentificat cu cheia din repository");
-          Blynk.virtualWrite(CHN_AUTH,SECURE_AUTH_KEY);
-          digitalWrite(PIN_ZAVOR,HIGH);
-          blynk_timer.setTimer(zavor_config_timeout, timeout_zavor, 1);
-          Blynk.virtualWrite(CHN_AUTH,NEW_AUTH_KEY); // informam serverul ca autentificarea a fost reusita
-        }
+      DEBUG_PRINTLN("Ne-am autentificat cu cheia din repository");
+      autentificat = true;
+      if(debug) {
+        DEBUG_PRINTLN("Modul debug este activ => Accesul este permis")
+        acces_permis = true;
+        Blynk.virtualWrite(CHN_AUTH,SECURE_AUTH_KEY); // informam serverul ca autentificarea a fost reusita
       }
     } else { // autentificarea cu cheia din repository nu a fost posibila
       detach_current_card(); // trebuie reinitializata comunicatia cu cardul pentru a incerca o cheie noua
       if(! verifica_card_nou()) { // dupa deconectare cardul trebuie sa se re-connecteze (se comporta ca un card nou)
         // daca acest card nu s-a reconectat, nu mai putem face nimic
-        config_intarziere_autentificare();
-        detach_current_card();
+        DEBUG_PRINT("___auth2 ");
+        config_intarziere_intoarcere_la_idle(TIMEOUT_INTRE_AUTENTIFICARE_SI_IDLE);
         return;
       }
     }
@@ -101,39 +94,73 @@ void NFC::autentificare(void) {
       autentificat = true;
       DEBUG_PRINTLN("Autentificat cu cheia din fabrica");
       Blynk.virtualWrite(CHN_AUTH,DEFAULT_AUTH_KEY);
-      if(update_key) {
-        update_key_on_card();
-      } else {
-        config_intarziere_autentificare();
-        detach_current_card();
-      }
     } else {
-      config_intarziere_autentificare();
-      detach_current_card();
+      DEBUG_PRINT("___auth3 ");
+      config_intarziere_intoarcere_la_idle(TIMEOUT_INTRE_AUTENTIFICARE_SI_IDLE);
+      return;
     }
+  }
+  if(true == acces_permis) {
+    digitalWrite(PIN_ZAVOR,HIGH);
+    blynk_timer.setTimer(zavor_config_timeout, timeout_zavor, 1);
+    acces_permis = false;
+  }
+  if(!update_key) {
+    DEBUG_PRINT("___auth4 ");
+    config_intarziere_intoarcere_la_idle(TIMEOUT_INTRE_AUTENTIFICARE_SI_IDLE);
   }
 }
 
 void NFC::update_key_on_card(void) {
-  stare.set(DETACH);
-  if( update_key) {
+  int i = 0;
+
+  stare.set(WAIT);
+
+  if(update_key) {
     DEBUG_PRINT("Schibam cheia pe card cu: "); DEBUG_PRINTLN(key_to_update);
 
-    if( read_block(BLOC_AUTENTIFICARE, card_data_buffer) ) {
-      for( int i=15; i>=0; i--) {
-        DEBUG_PRINT(card_data_buffer[i]);
-        DEBUG_PRINT(":");
+    // configuram bitii de acces la card
+    card_data_buffer[6] = 0x80;
+    card_data_buffer[7] = 0x07;
+    card_data_buffer[8] = 0xFF;
+
+    // configuram byte-ul utilizator - in general nefolosit
+    card_data_buffer[9] = 0xFF;
+
+    switch (key_to_update) {
+    case DEFAULT_AUTH_KEY:
+      // punem noua cheie A
+      for(i = 0; i < 6; i++) {
+        card_data_buffer[i] = nfc_default_key_a.keyByte[i];
       }
-      DEBUG_PRINTLN("");
-      for( int i=10; i<16; i++) {
-        card_data_buffer[i] = nfc_secure_key_a.keyByte[i-10];
+      // punem noua cheie B
+      for(i = 10; i < 16; i++) {
+        card_data_buffer[i] = nfc_default_key_b.keyByte[i];
       }
-      for( int i=15; i>=0; i--) {
-        DEBUG_PRINT(card_data_buffer[i]);
-        DEBUG_PRINT(":");
+      break;
+    case SECURE_AUTH_KEY:
+      // punem noua cheie A
+      for(i = 0; i < 6; i++) {
+        card_data_buffer[i] = nfc_secure_key_a.keyByte[i];
       }
-      DEBUG_PRINTLN("");
-      write_block(BLOC_AUTENTIFICARE, card_data_buffer);
+      // punem noua cheie B
+      for(i = 10; i < 16; i++) {
+        card_data_buffer[i] = nfc_secure_key_b.keyByte[i];
+      }
+      break;
+    case NEW_AUTH_KEY:
+      // punem noua cheie A
+      for(i = 0; i < 6; i++) {
+        card_data_buffer[i] = key.keyByte[i];
+      }
+      // punem noua cheie B
+      for(i = 10; i < 16; i++) {
+        card_data_buffer[i] = key.keyByte[i];
+      }
+      break;
+    }
+
+    write_block(BLOC_AUTENTIFICARE, card_data_buffer);
       //255:255:255:255:255:255:105:128:7:255:0:0:0:0:0:0:
       //55:100:145:219:254:202:105:128:7:255:0:0:0:0:0:0:
 
@@ -142,29 +169,23 @@ void NFC::update_key_on_card(void) {
     /// g1 < Access bits C1 C2 C3] for block 1 (for sectors 0-31) or blocks 5-9 (for sectors 32-39)
     /// g2 < Access bits C1 C2 C3] for block 2 (for sectors 0-31) or blocks 10-14 (for sectors 32-39)
     /// g3 < Access bits C1 C2 C3] for the sector trailer, block 3 (for sectors 0-31) or block 15 (for sectors 32-39)
-
-    } else {
-      DEBUG_PRINTLN("READ BLOCK FAILED!!!");
-    }
   }
-  config_intarziere_autentificare();
-  detach_current_card();
+  DEBUG_PRINT("___update ");
+  config_intarziere_intoarcere_la_idle(TIMEOUT_INTRE_SCHIMBARE_CHEIE_SI_IDLE);
 }
 
 bool NFC::verifica_card_nou(void) {
   bool result = false;
-  if(stare.isState(IDLE)) {
-    if ( mfrc522.PICC_IsNewCardPresent()) { // Card nou detectat (sau redetectat in timpul unei autentificari)
-      if ( mfrc522.PICC_ReadCardSerial()) { // Numar serial card cititi cu succes
-        //Blynk.virtualWrite(CHN_CARD_UID, blynk_buffer, mfrc522.uid.size >> 1);
-        if( is_valid_card_type() ) { // verifica daca avem un card pe care stim sa-l procesam
-          Blynk.virtualWrite(V2,1); // inform server CARD is VALID
-          result = true;
-        } else {
-          Blynk.virtualWrite(V2,0); // inform server CARD is NON-VALID
-          result = false;
-        } 
-      }
+  if ( mfrc522.PICC_IsNewCardPresent()) { // Card nou detectat (sau redetectat in timpul unei autentificari)
+    if ( mfrc522.PICC_ReadCardSerial()) { // Numar serial card cititi cu succes
+      //Blynk.virtualWrite(CHN_CARD_UID, blynk_buffer, mfrc522.uid.size >> 1);
+      if( is_valid_card_type() ) { // verifica daca avem un card pe care stim sa-l procesam
+        Blynk.virtualWrite(CHN_VALID_CARD,1); // inform server CARD is VALID
+        result = true;
+      } else {
+        Blynk.virtualWrite(CHN_VALID_CARD,0); // inform server CARD is NON-VALID
+        result = false;
+      } 
     }
   }
   return result;
@@ -178,6 +199,9 @@ void NFC::set_key_to_update(byte auth) {
 void NFC::set_permite_update_cheie(byte updatam) {
   update_key = (1 == updatam);
   DEBUG_PRINT("Updatam cheie: "); DEBUG_PRINTLN(updatam);
+  if(update_key && autentificat) {
+    stare.set(UPDATE_KEY);
+  }
 }
 
 bool NFC::save_new_key(const unsigned char buffer[], size_t length) {
@@ -279,15 +303,22 @@ void NFC::detach_current_card(void) {
   mfrc522.PCD_Init(SS_PIN, RST_PIN);
 }
 
-void NFC::config_intarziere_autentificare(void) {
-  blynk_timer.setTimer(autentificare_timeout, timeout_autentificare, 1);
-  stare.set(DETACH);
-  DEBUG_PRINT("Dezactivare autentificare pentru: "); DEBUG_PRINTLN(autentificare_timeout);
+void timeout_intoarcere_la_idle(void) { // apelata de timer ca sa activeze functionalitatea
+   nfc.configureaza_idle();
 }
 
-void NFC::configureaza_idle(void) { // timer ca sa inchida zavorul dupa un interval prestabilit
-   stare.set(IDLE);
-   DEBUG_PRINTLN("Activare autentificare");
+void NFC::config_intarziere_intoarcere_la_idle(const unsigned long mili_secunde) {
+  stare.set(WAIT);
+  blynk_timer.setTimer(mili_secunde, timeout_intoarcere_la_idle, 1);
+  DEBUG_PRINT("Asteapta pentru o noua operatie: "); DEBUG_PRINTLN(mili_secunde);
+}
+
+void NFC::configureaza_idle(void) {
+  detach_current_card();
+  autentificat = false;
+  acces_permis = false;
+  stare.set(IDLE);
+  DEBUG_PRINTLN("Inapoi la IDLE");
 }
 
 void NFC::read_data(void) {

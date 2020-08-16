@@ -14,9 +14,7 @@ const char* StareNfcStr[MAX_NFC_CONFIG_VALUE] = {
     "NFC:IDLE",
     "NFC:UPDATE_KEY",
     "NFC:SAVE_NEW_KEY",
-    "NFC:READ_DATA",
-    "NFC:WRITE_DATA",
-    "NFC:DETACH",
+    "NFC:WAIT",
     "NFC:NFC_ERROR"
 };
 

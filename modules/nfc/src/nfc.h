@@ -39,7 +39,7 @@ class NFC {
     void error(void);              // 
 
     bool authenticate_card(const enum MFRC522::PICC_Command, MFRC522::MIFARE_Key, byte);
-    void config_intarziere_autentificare();
+    void config_intarziere_intoarcere_la_idle(const unsigned long);
     bool read_block(byte block_number, byte buffer[18]);
     bool write_block(byte block_number, byte buffer[16]);
     bool is_valid_card_type();
@@ -55,7 +55,11 @@ class NFC {
 
     MFRC522::MIFARE_Key key;
     bool received_new_key = false;
-    bool update_key = false;
+
+    bool update_key   = false;
+    bool autentificat = false;
+    bool acces_permis = false;
+
     ListaStariAuth key_to_update;
 
     char uid[7];

@@ -20,6 +20,6 @@ void setup() {
 }
 
 void loop() {
-   deviceInitializare.run();
    Blynk.run();
+   blynk_timer.run();
 }

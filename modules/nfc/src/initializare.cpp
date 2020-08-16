@@ -29,9 +29,9 @@ void Initializare::begin() {
       #ifdef APP_DEBUG
          Serial.begin(blynk_serial_speed); // seriala hard folosita pentru debug (prin usb - serial monitor)
          #define BLYNK_PRINT Serial
-         DEBUG_PRINT("Hardware v "); DEBUG_PRINTLN( String(NFC_FW_VER).c_str() );
-         DEBUG_PRINT("Firmware v "); DEBUG_PRINTLN( String(NFC_HW_VER).c_str() );
-         DEBUG_PRINT("NFC Shield "); DEBUG_PRINTLN( String(NFC_SHIELD).c_str() );
+         //DEBUG_PRINT("Hardware v "); DEBUG_PRINTLN( String(NFC_FW_VER).c_str() );
+         //DEBUG_PRINT("Firmware v "); DEBUG_PRINTLN( String(NFC_HW_VER).c_str() );
+         //DEBUG_PRINT("NFC Shield "); DEBUG_PRINTLN( String(NFC_SHIELD).c_str() );
       #endif
       Blynk.begin(blynk_auth, ssid, pass); // WiFi folosit in comunicare cu serverul Blynk
    #endif
@@ -76,10 +76,6 @@ void timeout_zavor(void) { // timer ca sa inchida zavorul dupa un interval prest
    //DEBUG_PRINTLN("Activare zavor");
 }
 
-void timeout_autentificare(void) { // apelata de timer ca sa activeze functionalitatea
-   nfc.configureaza_idle();
-}
-
 BLYNK_WRITE(CHN_SECURE_KEY) { // Receptie cheie sigura de la aplicatie
    //DEBUG_PRINT("Cheie noua primita (HEX): "); DEBUG_PRINTLN(param.asStr() );
    dispozitiv.primitConfigurare((const unsigned char *)param.getBuffer(), param.getLength());
@@ -100,10 +96,4 @@ BLYNK_WRITE(CHN_ZAVOR) {
       digitalWrite(PIN_ZAVOR, zavor);
       blynk_timer.setTimer(zavor_config_timeout, timeout_zavor, 1);
    }
-}
-
-void Initializare::run() {
-   dispozitiv.run();
-   nfc.run();
-   blynk_timer.run();
 }

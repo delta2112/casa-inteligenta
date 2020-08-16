@@ -9,7 +9,6 @@
 class Initializare {
    public:
       void begin(void);  // configure everything and start processes
-      void run(void);    // runs all framework loops
 };
 
 extern Initializare deviceInitializare;
@@ -21,6 +20,5 @@ void system_timer(void);
 void nfc_timer(void);
 void timeout_config(void);
 void timeout_zavor(void);
-void timeout_autentificare(void);
 
 #endif  // INITIALIZARE_CONFIG_FILE
