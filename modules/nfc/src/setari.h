@@ -55,7 +55,7 @@ constexpr unsigned long TIMEOUT_INTRE_SCHIMBARE_CHEIE_SI_IDLE = 4000L;
 #endif
 
 // NFC settings
-constexpr byte BLOC_AUTENTIFICARE = 3; // acest bloc e folosit pentru verificarea autentificarii
+constexpr byte BLOC_AUTENTIFICARE = 7; //3 acest bloc e folosit pentru verificarea autentificarii
 
 enum ListaStariAuth {
     NOT_AUTH,
@@ -82,15 +82,15 @@ constexpr unsigned char debug_serial_tx = 4;
 constexpr unsigned int  debug_speed     = 38400;
 
 constexpr unsigned long system_timer_interval = 1000L;
-constexpr unsigned long nfc_timer_interval = 500L; // 500L
+constexpr unsigned long nfc_timer_interval = 200L; // 500L
 
-constexpr MFRC522::MIFARE_Key nfc_default_key_a = {.keyByte = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}}; // All keys "A" are set to FFFFFFFFFFFFh at delivery from factory.
-constexpr MFRC522::MIFARE_Key nfc_default_key_b = {.keyByte = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}}; // All keys "B" are set to FFFFFFFFFFFFh at delivery from factory.
-//constexpr MFRC522::MIFARE_Key nfc_default_key_b = {.keyByte = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7}};
+ // All keys "A" and "B" are set to FFFFFFFFFFFFh at delivery from factory.
+constexpr MFRC522::MIFARE_Key nfc_default_key_a = {.keyByte = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}};
+constexpr MFRC522::MIFARE_Key nfc_default_key_b = {.keyByte = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}};
 
-//constexpr MFRC522::MIFARE_Key nfc_secure_key_a = {.keyByte = {0xCA, 0xFE, 0xDB, 0x91, 0x64, 0x37}}; // Private keys
-//constexpr MFRC522::MIFARE_Key nfc_secure_key_a = {.keyByte = {0x37, 0x64, 0x91, 0xDB, 0xFE, 0xCA}}; // Private keys
-constexpr MFRC522::MIFARE_Key nfc_secure_key_a = {.keyByte = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}; // Private keys
+ // Key salvate in repository pentru teste
+ // (oricine le poate citi din repository deci folosite doar pentru teste)
+constexpr MFRC522::MIFARE_Key nfc_secure_key_a = {.keyByte = {0xCA, 0xFE, 0xDB, 0x91, 0x64, 0x37}};
 constexpr MFRC522::MIFARE_Key nfc_secure_key_b = {.keyByte = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7}};
 
 #endif

@@ -12,9 +12,11 @@ const char* StareSystemStr[MAX_SYSTEM_CONFIG_VALUE] = {
 
 const char* StareNfcStr[MAX_NFC_CONFIG_VALUE] = {
     "NFC:IDLE",
-    "NFC:UPDATE_KEY",
-    "NFC:SAVE_NEW_KEY",
-    "NFC:WAIT",
+    "NFC:CARD_NOU",
+    "NFC:AUTENTIFICAT",
+    "NFC:ZAVOR_DESCHIS",
+    "NFC:SCRIERE_CHEIE",
+    "NFC:ASTEPTARE",
     "NFC:NFC_ERROR"
 };
 

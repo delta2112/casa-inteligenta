@@ -29,7 +29,7 @@ class NFC {
 
   private:
     bool verifica_card_nou(void);
-    void autentificare(void);
+    bool autentificare(void);
     void update_key_on_card(void); // changed key on the Mifare card with "new key"
                                    // stored in "key" attribute
     void read_data(void);          // read data from card
@@ -57,7 +57,6 @@ class NFC {
     bool received_new_key = false;
 
     bool update_key   = false;
-    bool autentificat = false;
     bool acces_permis = false;
 
     ListaStariAuth key_to_update;

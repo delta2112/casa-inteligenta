@@ -15,11 +15,13 @@ enum ListaStariSystem {
                             // for other defines
 };
 enum ListaStariNfc {
-    IDLE,        // waiting for things to happen
-    UPDATE_KEY,  // and the new presented card
-    SAVE_NEW_KEY,// save it inside the class "key" attribute
-    WAIT,        // asteapta timeoutul configurat
-    NFC_ERROR,   // nfc working error
+    IDLE,          // verifica regulat daca exista card nou (polling)
+    CARD_NOU,      // un nou card a fost detectat
+    AUTENTIFICAT,  // noul card a fost autentificat cu una dintre chei
+    ZAVOR_DESCHIS, // am actionat zavorul, si asteptam timeout zavor
+    SCRIERE_CHEIE, // scriem o cheie diferita pe card
+    ASTEPTARE,     // Asteptam sa ne intoarcem la idle
+    NFC_ERROR,     // nfc working error
 
     MAX_NFC_CONFIG_VALUE // keep this entry the last one to use as "length" of enum
                          // for other defines
