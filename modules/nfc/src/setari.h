@@ -52,6 +52,7 @@ constexpr unsigned long TIMEOUT_INTRE_SCHIMBARE_CHEIE_SI_IDLE = 4000L;
 #endif
 #ifdef ARDUINO_ESP8266_WEMOS_D1MINILITE
     constexpr byte PIN_ZAVOR = D4;
+    constexpr byte PIN_LED_BLUE = D0;
 #endif
 
 // NFC settings
@@ -60,7 +61,6 @@ constexpr byte BLOC_AUTENTIFICARE = 7; //3 acest bloc e folosit pentru verificar
 enum ListaStariAuth {
     NOT_AUTH,
     DEFAULT_AUTH_KEY,
-    SECURE_AUTH_KEY,
     NEW_AUTH_KEY,
 
     MAX_AUTH_CONFIG_VALUE // keep this entry the last one to use as "length" of enum
@@ -87,10 +87,5 @@ constexpr unsigned long nfc_timer_interval = 200L; // 500L
  // All keys "A" and "B" are set to FFFFFFFFFFFFh at delivery from factory.
 constexpr MFRC522::MIFARE_Key nfc_default_key_a = {.keyByte = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}};
 constexpr MFRC522::MIFARE_Key nfc_default_key_b = {.keyByte = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}};
-
- // Key salvate in repository pentru teste
- // (oricine le poate citi din repository deci folosite doar pentru teste)
-constexpr MFRC522::MIFARE_Key nfc_secure_key_a = {.keyByte = {0xCA, 0xFE, 0xDB, 0x91, 0x64, 0x37}};
-constexpr MFRC522::MIFARE_Key nfc_secure_key_b = {.keyByte = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7}};
 
 #endif

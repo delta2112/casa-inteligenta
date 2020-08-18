@@ -38,7 +38,12 @@ void Initializare::begin() {
 
    // initializare pin zavor
    pinMode(PIN_ZAVOR,OUTPUT);
-   digitalWrite(PIN_ZAVOR,LOW); // zavor inchis initial
+   digitalWrite(PIN_ZAVOR, LOW); // zavor inchis initial
+
+   // initializare LED scriere cheie
+   pinMode(PIN_LED_BLUE,OUTPUT);
+   digitalWrite(PIN_ZAVOR, HIGH); // LED stins initial
+   
 
    dispozitiv.begin(); // initializare completa dispozitiv
    nfc.begin();        // initializare modul nfc
@@ -91,8 +96,8 @@ BLYNK_WRITE(CHN_CONFIG_KEY_TO_UPDATE) {
 
 BLYNK_WRITE(CHN_ZAVOR) {
    int zavor = param.asInt();
-   if( zavor == 1 ) {
-      //DEBUG_PRINTLN("Dezactivare zavor");
+   if( 1 == zavor ) {
+      DEBUG_PRINTLN("Deschid zavor");
       digitalWrite(PIN_ZAVOR, zavor);
       blynk_timer.setTimer(zavor_config_timeout, timeout_zavor, 1);
    }

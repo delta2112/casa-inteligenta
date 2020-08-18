@@ -40,6 +40,7 @@ void NFC::run(void) { // IDLE running on timer
         }
         break;
       case SCRIERE_CHEIE:
+        digitalWrite(PIN_LED_BLUE,LOW);
         update_key_on_card();
         config_intarziere_intoarcere_la_idle(TIMEOUT_INTRE_SCHIMBARE_CHEIE_SI_IDLE);
         break;
@@ -68,7 +69,7 @@ bool NFC::autentificare(void) {
       acces_permis = true;
       DEBUG_PRINTLN("Ne-am autentificat cu cheia sigura");
       DEBUG_PRINTLN("Accesul este permis");
-      Blynk.virtualWrite(CHN_AUTH,SECURE_AUTH_KEY); // informam serverul ca autentificarea a fost reusita
+      Blynk.virtualWrite(CHN_AUTH,NEW_AUTH_KEY); // informam serverul ca autentificarea a fost reusita
     } else {
       detach_current_card(); // trebuie reinitializata comunicatia cu cardul pentru a incerca o cheie noua
       if(! verifica_card_nou()) { // dupa deconectare cardul trebuie sa se re-connecteze (se comporta ca un card nou)
@@ -77,23 +78,6 @@ bool NFC::autentificare(void) {
     }
   }
   if(! autentificat) { // autentificarea cu cheia noua nu a fost posibila
-    // incercam autentificarea cu cheia din repository (nfc_secure_key_a din setari.h)
-    if( authenticate_card(READ_KEYA, nfc_secure_key_a, BLOC_AUTENTIFICARE) ) {
-      DEBUG_PRINTLN("Ne-am autentificat cu cheia din repository");
-      autentificat = true;
-      if(debug) {
-        DEBUG_PRINTLN("Modul debug este activ => Accesul este permis")
-        acces_permis = true;
-        Blynk.virtualWrite(CHN_AUTH,SECURE_AUTH_KEY); // informam serverul ca autentificarea a fost reusita
-      }
-    } else { // autentificarea cu cheia din repository nu a fost posibila
-      detach_current_card(); // trebuie reinitializata comunicatia cu cardul pentru a incerca o cheie noua
-      if(! verifica_card_nou()) { // dupa deconectare cardul trebuie sa se re-connecteze (se comporta ca un card nou)
-        return autentificat; // daca acest card nu s-a reconectat, nu mai putem face nimic
-      }
-    }
-  }
-  if(! autentificat) { // autentificarea cu cheia noua sau cea din repository nu a fost posibila
     // incercam autentificarea cu cheia implicita din fabrica (nfc_default_key_a din setari.h)
     if( authenticate_card(READ_KEYA, nfc_default_key_a, BLOC_AUTENTIFICARE) ) {
       autentificat = true;
@@ -138,16 +122,6 @@ void NFC::update_key_on_card(void) {
       // punem noua cheie B
       for(i = 10; i < 16; i++) {
         card_data_buffer[i] = nfc_default_key_b.keyByte[i];
-      }
-      break;
-    case SECURE_AUTH_KEY:
-      // punem noua cheie A
-      for(i = 0; i < 6; i++) {
-        card_data_buffer[i] = nfc_secure_key_a.keyByte[i];
-      }
-      // punem noua cheie B
-      for(i = 10; i < 16; i++) {
-        card_data_buffer[i] = nfc_secure_key_b.keyByte[i];
       }
       break;
     case NEW_AUTH_KEY:
@@ -309,6 +283,9 @@ void NFC::config_intarziere_intoarcere_la_idle(const unsigned long mili_secunde)
 }
 
 void NFC::configureaza_idle(void) {
+  if(SCRIERE_CHEIE == stare.get()) {
+    digitalWrite(PIN_LED_BLUE,HIGH);
+  }
   stare.set(IDLE);
   DEBUG_PRINTLN("Inapoi la IDLE");
 }
