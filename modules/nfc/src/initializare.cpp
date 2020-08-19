@@ -42,7 +42,7 @@ void Initializare::begin() {
 
    // initializare LED scriere cheie
    pinMode(PIN_LED_BLUE,OUTPUT);
-   digitalWrite(PIN_ZAVOR, HIGH); // LED stins initial
+   digitalWrite(PIN_LED_BLUE, HIGH); // LED stins initial
    
 
    dispozitiv.begin(); // initializare completa dispozitiv

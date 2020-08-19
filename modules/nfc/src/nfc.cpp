@@ -277,15 +277,15 @@ void timeout_intoarcere_la_idle(void) { // apelata de timer ca sa activeze funct
 void NFC::config_intarziere_intoarcere_la_idle(const unsigned long mili_secunde) {
   acces_permis = false;
   detach_current_card();
+  if(SCRIERE_CHEIE == stare.get()) {
+    digitalWrite(PIN_LED_BLUE,HIGH);
+  }
   stare.set(ASTEPTARE);
   blynk_timer.setTimer(mili_secunde, timeout_intoarcere_la_idle, 1);
   DEBUG_PRINT("Asteapta pentru o noua operatie: "); DEBUG_PRINTLN(mili_secunde);
 }
 
 void NFC::configureaza_idle(void) {
-  if(SCRIERE_CHEIE == stare.get()) {
-    digitalWrite(PIN_LED_BLUE,HIGH);
-  }
   stare.set(IDLE);
   DEBUG_PRINTLN("Inapoi la IDLE");
 }
